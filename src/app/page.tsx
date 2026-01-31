@@ -116,34 +116,87 @@ export default function LandingPage() {
             <PublicNavbar />
 
             {/* Hero Section */}
-            <section className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
-                <div className="text-center mb-12">
-                    <div className="inline-block mb-4 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20">
-                        <span className="text-rose-500 text-xs font-semibold">🎓 Student-Run • Open Source • Fully Transparent</span>
-                    </div>
-                    <h1 className="text-4xl sm:text-5xl font-bold text-[var(--text-primary)] mb-4">
-                        Your Academic Performance, <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600">Your Control</span>
-                    </h1>
-                    <p className="text-[var(--text-secondary)] text-lg mb-8 max-w-2xl mx-auto">
-                        Privacy-first academic analytics platform for GGSIPU students. Connect with peers, track your CGPA, and control exactly what data you share.
-                    </p>
+            <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-[var(--secondary)]/30">
+                {/* Animated gradient background elements */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute bottom-20 right-10 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
                 </div>
 
-                {/* Features Grid */}
+                <div className="relative z-10 max-w-7xl mx-auto px-4 py-16 sm:py-24">
+                    <div className="text-center">
+                        {/* Badge */}
+                        <div className="inline-block mb-6 px-4 py-2 rounded-full bg-rose-500/10 border border-rose-500/30 backdrop-blur-sm hover:border-rose-500/50 transition-colors">
+                            <span className="text-rose-500 text-sm font-semibold flex items-center gap-2">
+                                <GraduationCap className="w-4 h-4" />
+                                Student-Run • Open Source • Fully Transparent
+                            </span>
+                        </div>
+
+                        {/* Main Headline */}
+                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-[var(--text-primary)] mb-6 leading-tight">
+                            Your Academic Performance,{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500">
+                                Your Control
+                            </span>
+                        </h1>
+
+                        {/* Subheadline */}
+                        <p className="text-lg sm:text-xl text-[var(--text-secondary)] mb-8 max-w-3xl mx-auto leading-relaxed">
+                            Privacy-first academic analytics platform for GGSIPU students. Connect with peers, track your CGPA, and control exactly what data you share.
+                        </p>
+
+                        {/* CTA Buttons */}
+                        <div className="flex items-center justify-center mb-16">
+                            <button
+                                onClick={handleGitHubSignIn}
+                                disabled={loading}
+                                className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg hover:shadow-xl"
+                            >
+                                {loading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <Github className="w-5 h-5" />
+                                )}
+                                Sign In with GitHub
+                            </button>
+                        </div>
+
+                        {/* Trust indicators */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-[var(--text-muted)] pt-8 border-t border-[var(--card-border)]">
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500 font-bold">✓</span>
+                                <span>End-to-end Encrypted</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500 font-bold">✓</span>
+                                <span>Row-Level Security</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500 font-bold">✓</span>
+                                <span>Audit Logs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Features Grid */}
+            <section className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
                     {features.map((feature, i) => (
                         <div key={i} className="p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)] hover:border-rose-500/30 transition-all">
-                                <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
-                                        <feature.icon className="w-5 h-5 text-rose-500" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-[var(--text-primary)]">{feature.title}</h3>
-                                        <p className="text-[var(--text-muted)] text-sm mt-1">{feature.description}</p>
-                                    </div>
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
+                                    <feature.icon className="w-5 h-5 text-rose-500" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-[var(--text-primary)]">{feature.title}</h3>
+                                    <p className="text-[var(--text-muted)] text-sm mt-1">{feature.description}</p>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+                    ))}
                 </div>
             </section>
 
@@ -253,28 +306,28 @@ export default function LandingPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
-                        <h3 className="font-bold text-[var(--text-primary)] mb-3">Compliance</h3>
-                        <ul className="space-y-2 text-[var(--text-muted)] text-sm">
-                            <li>✓ GDPR Compliant</li>
-                            <li>✓ Aligned with Indian data protection frameworks</li>
-                            <li>✓ Data Protection Act aligned</li>
-                            <li>✓ No unauthorized data retention</li>
-                            <li>✓ Transparent privacy policies</li>
-                        </ul>
-                    </div>
+                        <div className="p-6 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                            <h3 className="font-bold text-[var(--text-primary)] mb-3">Compliance</h3>
+                            <ul className="space-y-2 text-[var(--text-muted)] text-sm">
+                                <li>✓ GDPR Compliant</li>
+                                <li>✓ Aligned with Indian data protection frameworks</li>
+                                <li>✓ Data Protection Act aligned</li>
+                                <li>✓ No unauthorized data retention</li>
+                                <li>✓ Transparent privacy policies</li>
+                            </ul>
+                        </div>
 
-                    <div className="p-6 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
-                        <h3 className="font-bold text-[var(--text-primary)] mb-3">Technology & Security</h3>
-                        <ul className="space-y-2 text-[var(--text-muted)] text-sm">
-                            <li>✓ End-to-end encrypted connections (TLS)</li>
-                            <li>✓ Row-Level Security (RLS) in database</li>
-                            <li>✓ Server-side validation</li>
-                            <li>✓ Immutable audit logs</li>
-                            <li>✓ Regular security updates</li>
-                        </ul>
+                        <div className="p-6 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                            <h3 className="font-bold text-[var(--text-primary)] mb-3">Technology & Security</h3>
+                            <ul className="space-y-2 text-[var(--text-muted)] text-sm">
+                                <li>✓ End-to-end encrypted connections (TLS)</li>
+                                <li>✓ Row-Level Security (RLS) in database</li>
+                                <li>✓ Server-side validation</li>
+                                <li>✓ Immutable audit logs</li>
+                                <li>✓ Regular security updates</li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
                 </div>
             </section>
 
@@ -297,7 +350,7 @@ export default function LandingPage() {
                     </button>
                 </div>
             </section>
-            
+
             <PublicFooter />
         </div>
     );

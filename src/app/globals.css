@@ -198,6 +198,24 @@ html.light .glass,
 
 /* ========== ANIMATIONS ========== */
 
+/* Gradient animation */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
 /* Fade In Up Animation */
 @keyframes fadeInUp {
   from {
@@ -300,6 +318,11 @@ html.light .glass,
 
 .animate-glow-pulse {
   animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Delay utilities */
+.delay-1000 {
+  animation-delay: 1s;
 }
 
 /* Shimmer Effect */

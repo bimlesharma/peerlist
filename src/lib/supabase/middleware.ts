@@ -55,19 +55,18 @@ export async function updateSession(request: NextRequest) {
             .from('students')
             .select('id')
             .eq('id', user.id)
-            .single();
-
-        // Debug: Log the query result
-        console.log('Middleware check - User:', user.id, 'Student:', student, 'Error:', error);
+            .maybeSingle();
 
         const url = request.nextUrl.clone();
 
         if (student) {
             // User has profile, go to dashboard
+            console.log('Middleware: Profile found for user', user.id, '- redirecting to dashboard');
             url.pathname = '/dashboard';
             return NextResponse.redirect(url);
         } else if (pathname !== '/onboarding') {
             // User doesn't have profile, go to onboarding
+            console.log('Middleware: No profile for user', user.id, '- redirecting to onboarding');
             url.pathname = '/onboarding';
             return NextResponse.redirect(url);
         }

@@ -8,8 +8,8 @@ import { Trophy, Lock, Users, Filter, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface RankboardEntry {
-    id: string;
-    display_name: string;
+    student_id: string;
+    display_name: string | null;
     batch: string | null;
     branch: string | null;
     college: string | null;
@@ -232,12 +232,12 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                             </thead>
                             <tbody className="divide-y divide-[var(--card-border)]">
                                 {filteredData.map((entry, index) => {
-                                    const isCurrentUser = entry.id === currentUserId;
+                                    const isCurrentUser = entry.student_id === currentUserId;
                                     const rank = index + 1;
 
                                     return (
                                         <tr
-                                            key={entry.id}
+                                            key={entry.student_id}
                                             className={`transition-colors ${isCurrentUser
                                                 ? 'bg-rose-500/10 hover:bg-rose-500/15'
                                                 : 'hover:bg-[var(--hover-bg)]'
@@ -269,7 +269,7 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`font-semibold ${isCurrentUser ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>
-                                                        {entry.display_name}
+                                                        {entry.display_name || 'Anonymous'}
                                                     </span>
                                                     {isCurrentUser && (
                                                         <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-500 rounded-full">

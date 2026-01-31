@@ -8,7 +8,7 @@ import { SubjectMarksStackedBarChart } from '@/components/SubjectMarksStackedBar
 import { ArrowLeft, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { marksToGrade, calculateSGPA, calculateCGPA, getGradeDistribution, getSemesterName } from '@/lib/grading';
-import type { Student, AcademicRecord, Subject } from '@/types';
+import type { AcademicRecord, Subject } from '@/types';
 import Link from 'next/link';
 
 interface RecordWithSubjects extends AcademicRecord {
@@ -26,8 +26,17 @@ interface ProcessedSemester {
     maxMarks: number;
 }
 
+interface PeerProfile {
+    id: string;
+    display_name: string | null;
+    batch: string | null;
+    branch: string | null;
+    college: string | null;
+    avatar_url: string | null;
+}
+
 interface PeerDashboardClientProps {
-    peer: Student;
+    peer: PeerProfile;
     records: RecordWithSubjects[];
 }
 
@@ -61,8 +70,7 @@ export function PeerDashboardClient({ peer, records }: PeerDashboardClientProps)
     const totalCredits = processed.reduce((sum, p) => sum + p.totalCredits, 0);
 
     // Peer info
-    const peerName = peer.name || 'Student';
-    const enrollmentNo = peer.enrollment_no || 'N/A';
+    const peerName = peer.display_name || 'Student';
     const institute = peer.college || 'N/A';
     const program = peer.branch || 'N/A';
     const batch = peer.batch || 'N/A';
@@ -137,9 +145,6 @@ export function PeerDashboardClient({ peer, records }: PeerDashboardClientProps)
                             <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] truncate">
                                 {peerName}
                             </h1>
-                            <p className="text-sm text-[var(--text-secondary)] font-mono mt-1">
-                                {enrollmentNo}
-                            </p>
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {program && (
                                     <span className="px-2 py-0.5 text-xs font-medium bg-[var(--secondary)] text-[var(--text-secondary)] rounded-md">

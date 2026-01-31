@@ -1,201 +1,414 @@
 -- =====================================================
--- Student Academic Analytics Platform - Database Schema
+-- 1. EXTENSIONS
 -- =====================================================
--- Run this SQL in Supabase SQL Editor to set up the database
--- Make sure to enable Google OAuth in Authentication > Providers
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 1. Students Table
--- -----------------
-CREATE TABLE students (
+-- =====================================================
+-- 2. STUDENTS (IDENTITY + CONSENT)
+-- =====================================================
+CREATE TABLE public.students (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+
   email TEXT NOT NULL,
   name TEXT,
   avatar_url TEXT,
-  enrollment_no TEXT UNIQUE NOT NULL,
+
+  enrollment_no TEXT NOT NULL,
   batch TEXT,
   branch TEXT,
-  college TEXT,
-  -- Consent flags
+  college TEXT NOT NULL,
+
+  -- Privacy Controls
   consent_analytics BOOLEAN DEFAULT false,
   consent_rankboard BOOLEAN DEFAULT false,
-  display_mode TEXT DEFAULT 'anonymous' 
-    CHECK (display_mode IN ('anonymous', 'pseudonymous', 'visible')),
-  -- Explicit marks visibility (extra confirmation required)
   marks_visibility BOOLEAN DEFAULT false,
   marks_visibility_at TIMESTAMPTZ,
-  -- Timestamps
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  display_mode TEXT DEFAULT 'anonymous'
+    CHECK (display_mode IN ('anonymous','pseudonymous','visible')),
+
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+
+  UNIQUE (enrollment_no, college)
 );
 
--- 2. Academic Records Table
--- -------------------------
-CREATE TABLE academic_records (
+-- =====================================================
+-- 3. ACADEMIC RECORDS
+-- =====================================================
+CREATE TABLE public.academic_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-  enrollment_no TEXT NOT NULL,
-  semester INTEGER NOT NULL CHECK (semester >= 1 AND semester <= 10),
-  submitted_at TIMESTAMPTZ DEFAULT NOW(),
-  -- CRITICAL: Prevent duplicate semester entries per student
-  UNIQUE(student_id, semester)
+  student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  semester INTEGER NOT NULL CHECK (semester BETWEEN 1 AND 10),
+  submitted_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (student_id, semester)
 );
 
--- 3. Subjects Table
--- -----------------
-CREATE TABLE subjects (
+-- =====================================================
+-- 4. SUBJECTS (FLEXIBLE MARKS SCHEME)
+-- =====================================================
+CREATE TABLE public.subjects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  record_id UUID NOT NULL REFERENCES academic_records(id) ON DELETE CASCADE,
-  code TEXT NOT NULL,
-  name TEXT NOT NULL,
-  internal_marks INTEGER CHECK (internal_marks >= 0 AND internal_marks <= 40),
-  external_marks INTEGER CHECK (external_marks >= 0 AND external_marks <= 60),
-  total_marks INTEGER,
-  credits INTEGER NOT NULL CHECK (credits >= 1 AND credits <= 6),
+  record_id UUID NOT NULL REFERENCES public.academic_records(id) ON DELETE CASCADE,
+
+  code TEXT,
+  name TEXT,
+
+  -- Marks Data
+  internal_marks INTEGER DEFAULT 0 CHECK (internal_marks >= 0),
+  external_marks INTEGER DEFAULT 0 CHECK (external_marks >= 0),
+
+  -- Scheme Configuration
+  max_internal INTEGER DEFAULT 40 CHECK (max_internal > 0),
+  max_external INTEGER DEFAULT 60 CHECK (max_external > 0),
+
+  -- Computed Total
+  total_marks INTEGER GENERATED ALWAYS AS (
+    COALESCE(internal_marks, 0) + COALESCE(external_marks, 0)
+  ) STORED,
+
+  -- Integrity Checks
+  CHECK (internal_marks <= max_internal),
+  CHECK (external_marks <= max_external),
+
+  credits INTEGER NOT NULL CHECK (credits BETWEEN 1 AND 10),
   grade TEXT,
-  grade_point DECIMAL(3,1) CHECK (grade_point >= 0 AND grade_point <= 10)
+  grade_point NUMERIC(3,1) CHECK (grade_point BETWEEN 0 AND 10)
 );
 
--- 4. Consent Audit Log Table
--- --------------------------
-CREATE TABLE consent_log (
+-- =====================================================
+-- 5. CONSENT AUDIT LOG
+-- =====================================================
+CREATE TABLE public.consent_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-  consent_type TEXT NOT NULL CHECK (consent_type IN ('analytics', 'rankboard', 'marks_visibility')),
-  action TEXT NOT NULL CHECK (action IN ('granted', 'revoked')),
-  logged_at TIMESTAMPTZ DEFAULT NOW(),
-  ip_address INET,
-  user_agent TEXT
+  student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  consent_type TEXT CHECK (consent_type IN ('analytics','rankboard','peers','identity')),
+  action TEXT CHECK (action IN ('granted','revoked')),
+  logged_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- =====================================================
--- Row Level Security (RLS) Policies
+-- 6. TRIGGERS (AUDIT & TIMESTAMPS)
 -- =====================================================
 
--- Enable RLS on all tables
+-- Auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.touch_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trg_students_updated
+BEFORE UPDATE ON public.students
+FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+-- Audit Consent Changes
+CREATE OR REPLACE FUNCTION public.log_consent_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF old.consent_analytics IS DISTINCT FROM new.consent_analytics THEN
+    INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'analytics',
+      CASE WHEN new.consent_analytics THEN 'granted' ELSE 'revoked' END, now());
+  END IF;
+
+  IF old.consent_rankboard IS DISTINCT FROM new.consent_rankboard THEN
+    INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'rankboard',
+      CASE WHEN new.consent_rankboard THEN 'granted' ELSE 'revoked' END, now());
+  END IF;
+
+  IF old.marks_visibility IS DISTINCT FROM new.marks_visibility THEN
+    INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'peers',
+      CASE WHEN new.marks_visibility THEN 'granted' ELSE 'revoked' END, now());
+
+    new.marks_visibility_at :=
+      CASE WHEN new.marks_visibility THEN now() ELSE NULL END;
+  END IF;
+
+  IF old.display_mode IS DISTINCT FROM new.display_mode THEN
+    INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'identity', 'granted', now());
+  END IF;
+
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trg_consent_audit
+BEFORE UPDATE ON public.students
+FOR EACH ROW EXECUTE FUNCTION public.log_consent_changes();
+
+-- Audit Initial Consent Choices (on INSERT during onboarding)
+CREATE OR REPLACE FUNCTION public.log_initial_consents()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Log ALL consent_analytics decisions (granted or revoked)
+  INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'analytics',
+    CASE WHEN new.consent_analytics THEN 'granted' ELSE 'revoked' END, now());
+
+  -- Log ALL consent_rankboard decisions (granted or revoked)
+  INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'rankboard',
+    CASE WHEN new.consent_rankboard THEN 'granted' ELSE 'revoked' END, now());
+
+  -- Log ALL marks_visibility decisions (granted or revoked)
+  INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'peers',
+    CASE WHEN new.marks_visibility THEN 'granted' ELSE 'revoked' END, now());
+
+  -- Always log display_mode choice as identity consent
+  INSERT INTO consent_log VALUES (gen_random_uuid(), new.id, 'identity', 'granted', now());
+
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trg_consent_audit_insert
+AFTER INSERT ON public.students
+FOR EACH ROW EXECUTE FUNCTION public.log_initial_consents();
+
+-- =====================================================
+-- 7. SECURITY & RLS POLICIES
+-- =====================================================
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE academic_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consent_log ENABLE ROW LEVEL SECURITY;
 
--- Students: Users can only access their own profile
-CREATE POLICY "Users can view own profile" ON students
-  FOR SELECT USING (auth.uid() = id);
+CREATE POLICY students_self_access ON students
+FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Users can insert own profile" ON students
-  FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY records_self_access ON academic_records
+FOR ALL USING (student_id = auth.uid());
 
-CREATE POLICY "Users can update own profile" ON students
-  FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY subjects_self_access ON subjects
+FOR ALL USING (
+  record_id IN (SELECT id FROM academic_records WHERE student_id = auth.uid())
+);
 
-CREATE POLICY "Users can delete own profile" ON students
-  FOR DELETE USING (auth.uid() = id);
+CREATE POLICY consent_log_self ON consent_log
+FOR SELECT USING (student_id = auth.uid());
 
--- Academic Records: Users can only access their own records
--- PLUS: Opted-in rankboard users can view other opted-in users' records
-CREATE POLICY "Users can view own records" ON academic_records
-  FOR SELECT USING (
-    auth.uid() = student_id
-    OR
-    (
-      EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND consent_rankboard = true)
-      AND
-      EXISTS (SELECT 1 FROM students WHERE id = student_id AND consent_rankboard = true)
-    )
+-- CRITICAL: Prevent users from manually inserting/editing logs.
+-- Only the "log_consent_changes" trigger (Security Definer) can write here.
+REVOKE INSERT, UPDATE, DELETE ON consent_log FROM authenticated;
+
+-- =====================================================
+-- 8. RANKBOARD (OPTIMIZED)
+-- =====================================================
+CREATE OR REPLACE VIEW public.rankboard_view AS
+WITH cohort_stats AS (
+  SELECT
+    id,
+    COUNT(*) OVER (PARTITION BY college, batch, branch) AS cohort_size
+  FROM students
+  WHERE consent_rankboard = true
+),
+semester_stats AS (
+  SELECT
+    ar.student_id,
+    ar.semester,
+    ROUND(
+      SUM(COALESCE(sub.grade_point, 0) * sub.credits)::numeric / NULLIF(SUM(sub.credits), 0),
+      2
+    ) as sgpa,
+    SUM(sub.credits) as total_credits
+  FROM academic_records ar
+  JOIN subjects sub ON sub.record_id = ar.id
+  WHERE COALESCE(sub.grade_point, 0) > 0
+  GROUP BY ar.student_id, ar.semester
+),
+student_cgpa AS (
+  SELECT
+    ss.student_id,
+    ROUND(
+      SUM(ss.sgpa * ss.total_credits)::numeric / NULLIF(SUM(ss.total_credits), 0),
+      2
+    ) as cgpa
+  FROM semester_stats ss
+  GROUP BY ss.student_id
+)
+SELECT
+  s.id AS student_id,
+  CASE
+    WHEN s.display_mode = 'visible' THEN s.name
+    WHEN s.display_mode = 'pseudonymous' THEN 'Student-' || LEFT(s.id::text, 6)
+    ELSE NULL
+  END AS display_name,
+  s.batch,
+  s.branch,
+  s.college,
+  sc.cgpa
+FROM students s
+JOIN cohort_stats cs ON cs.id = s.id
+JOIN student_cgpa sc ON sc.student_id = s.id
+WHERE cs.cohort_size >= 2;
+
+REVOKE ALL ON public.rankboard_view FROM authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_rankboard()
+RETURNS TABLE (
+  student_id UUID,
+  display_name TEXT,
+  batch TEXT,
+  branch TEXT,
+  college TEXT,
+  cgpa NUMERIC
+)
+LANGUAGE sql
+SECURITY DEFINER SET search_path = public AS $$
+  SELECT *
+  FROM rankboard_view
+  WHERE EXISTS (
+    SELECT 1 FROM students
+    WHERE id = auth.uid()
+      AND consent_rankboard = true
+      AND consent_analytics = true
   );
+$$;
 
-CREATE POLICY "Users can insert own records" ON academic_records
-  FOR INSERT WITH CHECK (auth.uid() = student_id);
-
-CREATE POLICY "Users can delete own records" ON academic_records
-  FOR DELETE USING (auth.uid() = student_id);
-
--- Subjects: Users can only access subjects in their own records
--- PLUS: Opted-in rankboard users can view other opted-in users' subjects
-CREATE POLICY "Users can view own subjects" ON subjects
-  FOR SELECT USING (
-    record_id IN (SELECT id FROM academic_records WHERE student_id = auth.uid())
-    OR
-    (
-      EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND consent_rankboard = true)
-      AND
-      record_id IN (
-        SELECT ar.id FROM academic_records ar
-        JOIN students s ON ar.student_id = s.id
-        WHERE s.consent_rankboard = true
-      )
-    )
-  );
-
-CREATE POLICY "Users can insert own subjects" ON subjects
-  FOR INSERT WITH CHECK (
-    record_id IN (SELECT id FROM academic_records WHERE student_id = auth.uid())
-  );
-
-CREATE POLICY "Users can delete own subjects" ON subjects
-  FOR DELETE USING (
-    record_id IN (SELECT id FROM academic_records WHERE student_id = auth.uid())
-  );
-
--- Consent Log: Users can only view their own logs
-CREATE POLICY "Users can view own consent logs" ON consent_log
-  FOR SELECT USING (auth.uid() = student_id);
+GRANT EXECUTE ON FUNCTION public.get_rankboard() TO authenticated;
 
 -- =====================================================
--- Consent Audit Trigger
+-- 9. PEER SYSTEM (DIRECTORY + MARKS)
 -- =====================================================
+CREATE OR REPLACE FUNCTION public.get_peers_directory()
+RETURNS TABLE (
+  id UUID,
+  display_name TEXT,
+  batch TEXT,
+  branch TEXT,
+  college TEXT,
+  avatar_url TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER SET search_path = public AS $$
+  SELECT
+    s.id,
+    CASE
+      WHEN s.display_mode = 'visible' THEN s.name
+      WHEN s.display_mode = 'pseudonymous' THEN 'Student-' || LEFT(s.id::text, 6)
+      ELSE NULL
+    END,
+    s.batch,
+    s.branch,
+    s.college,
+    s.avatar_url
+  FROM students s
+  JOIN students me ON me.id = auth.uid()
+  WHERE
+    s.college = me.college
+    AND s.marks_visibility = true
+    AND s.marks_visibility_at IS NOT NULL
+    AND me.marks_visibility = true
+    AND me.marks_visibility_at IS NOT NULL
+    AND s.id <> me.id;
+$$;
 
-CREATE OR REPLACE FUNCTION log_consent_change()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF OLD.consent_analytics IS DISTINCT FROM NEW.consent_analytics THEN
-    INSERT INTO consent_log (student_id, consent_type, action)
-    VALUES (NEW.id, 'analytics', CASE WHEN NEW.consent_analytics THEN 'granted' ELSE 'revoked' END);
-  END IF;
-  
-  IF OLD.consent_rankboard IS DISTINCT FROM NEW.consent_rankboard THEN
-    INSERT INTO consent_log (student_id, consent_type, action)
-    VALUES (NEW.id, 'rankboard', CASE WHEN NEW.consent_rankboard THEN 'granted' ELSE 'revoked' END);
-  END IF;
-  
-  IF OLD.marks_visibility IS DISTINCT FROM NEW.marks_visibility THEN
-    INSERT INTO consent_log (student_id, consent_type, action)
-    VALUES (NEW.id, 'marks_visibility', CASE WHEN NEW.marks_visibility THEN 'granted' ELSE 'revoked' END);
-    -- Also update timestamp when enabling
-    NEW.marks_visibility_at := CASE WHEN NEW.marks_visibility THEN NOW() ELSE NULL END;
-  END IF;
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+GRANT EXECUTE ON FUNCTION public.get_peers_directory() TO authenticated;
 
-CREATE TRIGGER consent_audit_trigger
-BEFORE UPDATE ON students
-FOR EACH ROW EXECUTE FUNCTION log_consent_change();
+-- Get Single Peer Profile (with mutual consent)
+CREATE OR REPLACE FUNCTION public.get_peer_profile(peer_id UUID)
+RETURNS TABLE (
+  id UUID,
+  display_name TEXT,
+  batch TEXT,
+  branch TEXT,
+  college TEXT,
+  avatar_url TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER SET search_path = public AS $$
+  SELECT
+    s.id,
+    CASE
+      WHEN s.display_mode = 'visible' THEN s.name
+      WHEN s.display_mode = 'pseudonymous' THEN 'Student-' || LEFT(s.id::text, 6)
+      ELSE NULL
+    END,
+    s.batch,
+    s.branch,
+    s.college,
+    s.avatar_url
+  FROM students s
+  JOIN students me ON me.id = auth.uid()
+  WHERE
+    s.id = peer_id
+    AND s.college = me.college
+    AND s.marks_visibility = true
+    AND s.marks_visibility_at IS NOT NULL
+    AND me.marks_visibility = true
+    AND me.marks_visibility_at IS NOT NULL;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_peer_profile(UUID) TO authenticated;
+
+-- Helper View for Marks (Revoked from public)
+CREATE OR REPLACE VIEW public.peer_marks_view AS
+SELECT
+  ar.student_id,
+  ar.semester,
+  sub.*
+FROM academic_records ar
+JOIN subjects sub ON sub.record_id = ar.id;
+
+REVOKE ALL ON public.peer_marks_view FROM authenticated;
+
+-- CORRECTED FUNCTION: Includes max_internal / max_external
+CREATE OR REPLACE FUNCTION public.get_peer_subjects(peer_id UUID)
+RETURNS TABLE (
+  student_id UUID,
+  semester INTEGER,
+  id UUID,
+  record_id UUID,
+  code TEXT,
+  name TEXT,
+  internal_marks INTEGER,
+  external_marks INTEGER,
+  max_internal INTEGER, -- Added to match table
+  max_external INTEGER, -- Added to match table
+  total_marks INTEGER,
+  credits INTEGER,
+  grade TEXT,
+  grade_point NUMERIC
+)
+LANGUAGE sql
+SECURITY DEFINER SET search_path = public AS $$
+  SELECT
+    pm.student_id,
+    pm.semester,
+    pm.id,
+    pm.record_id,
+    pm.code,
+    pm.name,
+    pm.internal_marks,
+    pm.external_marks,
+    pm.max_internal, -- Added to match table
+    pm.max_external, -- Added to match table
+    pm.total_marks,
+    pm.credits,
+    pm.grade,
+    pm.grade_point
+  FROM peer_marks_view pm
+  JOIN students peer ON peer.id = pm.student_id
+  JOIN students me ON me.id = auth.uid()
+  WHERE
+    peer.id = peer_id
+    AND peer.college = me.college
+    AND peer.marks_visibility = true
+    AND peer.marks_visibility_at IS NOT NULL
+    AND me.marks_visibility = true
+    AND me.marks_visibility_at IS NOT NULL;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_peer_subjects(UUID) TO authenticated;
 
 -- =====================================================
--- Rankboard Safe View (Only expose safe fields)
+-- 10. CRITICAL PERFORMANCE INDEXES
 -- =====================================================
+CREATE INDEX idx_academic_records_student_id 
+ON public.academic_records(student_id);
 
--- Students can see other opted-in students' basic data for rankboard
-CREATE POLICY "Rankboard read for opted-in users" ON students
-  FOR SELECT USING (
-    consent_rankboard = true 
-    AND EXISTS (
-      SELECT 1 FROM students WHERE id = auth.uid() AND consent_rankboard = true
-    )
-  );
+CREATE INDEX idx_subjects_record_id 
+ON public.subjects(record_id);
 
--- =====================================================
--- Instructions
--- =====================================================
--- 1. Go to Supabase Dashboard
--- 2. Navigate to Authentication > Providers
--- 3. Enable GitHub OAuth:
---    - Create OAuth App at github.com/settings/developers
---    - Homepage URL: http://localhost:3000
---    - Callback URL: https://your-project.supabase.co/auth/v1/callback
---    - Copy Client ID and Client Secret to Supabase
--- 4. Copy your Project URL and anon key from Settings > API
--- 5. Add to .env.local:
---    NEXT_PUBLIC_SUPABASE_URL=your-url
---    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+CREATE INDEX idx_students_cohort 
+ON public.students(college, batch, branch) 
+WHERE consent_rankboard = true;

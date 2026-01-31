@@ -21,7 +21,6 @@ export interface Student {
 export interface AcademicRecord {
   id: string;
   student_id: string;
-  enrollment_no: string;
   semester: number;
   submitted_at: string;
 }
@@ -33,6 +32,8 @@ export interface Subject {
   name: string;
   internal_marks: number;
   external_marks: number;
+  max_internal: number;
+  max_external: number;
   total_marks: number;
   credits: number;
   grade: string | null;
@@ -42,22 +43,19 @@ export interface Subject {
 export interface ConsentLog {
   id: string;
   student_id: string;
-  consent_type: 'analytics' | 'rankboard' | 'marks_visibility';
+  consent_type: 'analytics' | 'rankboard' | 'peers' | 'identity';
   action: 'granted' | 'revoked';
   logged_at: string;
-  ip_address: string | null;
-  user_agent: string | null;
 }
 
 // Rankboard safe view type (exposed fields only)
 export interface RankboardEntry {
-  id: string;
-  display_name: string;
+  student_id: string;
+  display_name: string | null;
   batch: string | null;
   branch: string | null;
   college: string | null;
   cgpa: number;
-  total_credits: number;
 }
 
 // Form types for data submission

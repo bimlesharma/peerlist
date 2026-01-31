@@ -47,9 +47,11 @@ export default function OnboardingPage() {
     const [studentBatch, setStudentBatch] = useState('');
     const [semesterResults, setSemesterResults] = useState<SemesterData[]>([]);
 
-    // Consent state
+    // Consent state - DEFAULT ALL TO TRUE (shown as ON)
     const [consentAnalytics, setConsentAnalytics] = useState(true);
-    const [consentRankboard, setConsentRankboard] = useState(false);
+    const [consentRankboard, setConsentRankboard] = useState(true);
+    const [consentMarksVisibility, setConsentMarksVisibility] = useState(true);
+    const [displayMode, setDisplayMode] = useState<'anonymous' | 'pseudonymous' | 'visible'>('anonymous');
     const [acknowledgeVoluntary, setAcknowledgeVoluntary] = useState(false);
 
     // UI state
@@ -68,13 +70,15 @@ export default function OnboardingPage() {
                 return;
             }
 
+            // Check if profile exists by user ID (simpler query to avoid RLS issues)
             const { data: existingProfile } = await supabase
                 .from('students')
-                .select('id')
+                .select('id, enrollment_no')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (existingProfile) {
+                console.log('Existing profile found, redirecting to dashboard');
                 router.replace('/dashboard');
                 return;
             }
@@ -225,20 +229,40 @@ export default function OnboardingPage() {
                 return;
             }
 
-            // Check if enrollment number already exists
-            const { data: existing } = await supabase
+            // Check if profile already exists for this user or enrollment number
+            const { data: existingByUser } = await supabase
                 .from('students')
-                .select('id')
-                .eq('enrollment_no', enrollmentNo.trim().toUpperCase())
-                .single();
+                .select('id, enrollment_no')
+                .eq('id', user.id)
+                .maybeSingle();
 
-            if (existing) {
-                setError('This enrollment number is already registered. Please contact support if this is your account.');
+            if (existingByUser) {
+                console.log('Profile already exists for this user, redirecting to dashboard');
+                router.refresh();
+                router.replace('/dashboard');
+                return;
+            }
+
+            const { data: existingByEnrollment } = await supabase
+                .from('students')
+                .select('id, email')
+                .eq('enrollment_no', enrollmentNo.trim().toUpperCase())
+                .maybeSingle();
+
+            if (existingByEnrollment) {
+                setError('This enrollment number is already registered with another account. If this is your enrollment number, please contact support.');
                 setLoading(false);
                 return;
             }
 
-            // Create student profile
+            // Validate college is provided
+            if (!studentInstitute || studentInstitute.trim() === '') {
+                setError('College/Institute information is required. Please ensure your IPU profile has complete information.');
+                setLoading(false);
+                return;
+            }
+
+            // Create student profile with explicit consent values
             const { error: insertError } = await supabase
                 .from('students')
                 .insert({
@@ -249,34 +273,40 @@ export default function OnboardingPage() {
                     enrollment_no: enrollmentNo.trim().toUpperCase(),
                     batch: studentBatch || null,
                     branch: studentProgram || null,
-                    college: studentInstitute || null,
+                    college: studentInstitute.trim(),
                     consent_analytics: consentAnalytics,
                     consent_rankboard: consentRankboard,
-                    display_mode: 'anonymous',
-                    marks_visibility: false,
+                    display_mode: displayMode,
+                    marks_visibility: consentMarksVisibility,
+                    marks_visibility_at: consentMarksVisibility ? new Date().toISOString() : null,
                 });
 
             if (insertError) {
                 console.error('Insert error:', insertError);
+                // Check if the error is due to duplicate key
+                if (insertError.code === '23505') {
+                    // Duplicate key violation - profile might have been created
+                    console.log('Duplicate key error, checking if profile exists now');
+                    const { data: profile } = await supabase
+                        .from('students')
+                        .select('id')
+                        .eq('id', user.id)
+                        .maybeSingle();
+                    
+                    if (profile) {
+                        // Profile exists now, redirect to dashboard
+                        router.refresh();
+                        router.replace('/dashboard');
+                        return;
+                    }
+                }
                 setError('Failed to create profile. Please try again.');
                 setLoading(false);
                 return;
             }
 
-            // Log initial consent choices
-            const consentLogs = [];
-            if (consentAnalytics) {
-                consentLogs.push({ student_id: user.id, consent_type: 'analytics', action: 'granted' });
-            }
-            if (consentRankboard) {
-                consentLogs.push({ student_id: user.id, consent_type: 'rankboard', action: 'granted' });
-            }
-            if (consentLogs.length > 0) {
-                const { error: consentError } = await supabase.from('consent_log').insert(consentLogs);
-                if (consentError) {
-                    console.error('Consent log insert error:', consentError);
-                }
-            }
+            // Consent logging is handled automatically by the database trigger (trg_consent_audit)
+            // when the student record is updated above. No manual inserts needed.
 
             // Insert all academic records and subjects
             for (const semData of semesterResults) {
@@ -285,7 +315,6 @@ export default function OnboardingPage() {
                     .from('academic_records')
                     .insert({
                         student_id: user.id,
-                        enrollment_no: enrollmentNo.trim().toUpperCase(),
                         semester: semData.semester,
                     })
                     .select()
@@ -332,9 +361,9 @@ export default function OnboardingPage() {
                         }
                     }
 
-                    // Clamp internal/external to database constraints
-                    const clampedInternal = Math.min(Math.max(internalMarks, 0), 100);
-                    const clampedExternal = Math.min(Math.max(externalMarks, 0), 100);
+                    // Clamp internal/external to database constraints (max_internal: 40, max_external: 60)
+                    const clampedInternal = Math.min(Math.max(internalMarks, 0), 40);
+                    const clampedExternal = Math.min(Math.max(externalMarks, 0), 60);
                     const clampedCredits = Math.min(Math.max(credits, 1), 10);
 
                     return {
@@ -343,7 +372,8 @@ export default function OnboardingPage() {
                         name: result.papername.trim(),
                         internal_marks: clampedInternal,
                         external_marks: clampedExternal,
-                        total_marks: totalMarks,
+                        max_internal: 40,
+                        max_external: 60,
                         credits: clampedCredits,
                         grade: marksToGrade(totalMarks),
                         grade_point: marksToGradePoint(totalMarks),
@@ -586,14 +616,14 @@ export default function OnboardingPage() {
                         <div className="card p-6 space-y-6 animate-fade-in-up stagger-1">
                             <div className="space-y-4">
                                 <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-                                    Privacy Settings
+                                    Privacy & Sharing Settings
                                 </h3>
 
                                 {/* Analytics Toggle */}
                                 <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
                                     <div className="flex-1">
                                         <p className="text-sm font-medium text-[var(--text-primary)]">
-                                            Enable Personal Analytics
+                                            Personal Analytics
                                         </p>
                                         <p className="text-xs text-[var(--text-secondary)] mt-1">
                                             View your SGPA/CGPA trends and grade distributions
@@ -604,8 +634,8 @@ export default function OnboardingPage() {
                                         role="switch"
                                         aria-checked={consentAnalytics}
                                         onClick={() => setConsentAnalytics(!consentAnalytics)}
-                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-[var(--background)] ${
-                                            consentAnalytics ? 'bg-rose-500' : 'bg-[var(--card-border)]'
+                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-background ${
+                                            consentAnalytics ? 'bg-rose-500' : 'bg-(--card-border)'
                                         }`}
                                     >
                                         <span
@@ -620,10 +650,10 @@ export default function OnboardingPage() {
                                 <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
                                     <div className="flex-1">
                                         <p className="text-sm font-medium text-[var(--text-primary)]">
-                                            Participate in Rankboard
+                                            Rankboard (College Leaderboard)
                                         </p>
                                         <p className="text-xs text-[var(--text-secondary)] mt-1">
-                                            Compare with peers (anonymous by default)
+                                            Compare CGPA with peers from your college
                                         </p>
                                     </div>
                                     <button
@@ -631,8 +661,8 @@ export default function OnboardingPage() {
                                         role="switch"
                                         aria-checked={consentRankboard}
                                         onClick={() => setConsentRankboard(!consentRankboard)}
-                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-[var(--background)] ${
-                                            consentRankboard ? 'bg-rose-500' : 'bg-[var(--card-border)]'
+                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-background ${
+                                            consentRankboard ? 'bg-rose-500' : 'bg-(--card-border)'
                                         }`}
                                     >
                                         <span
@@ -641,6 +671,84 @@ export default function OnboardingPage() {
                                             }`}
                                         />
                                     </button>
+                                </div>
+
+                                {/* Peers/Marks Visibility Toggle */}
+                                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">
+                                            Share Marks with Peers
+                                        </p>
+                                        <p className="text-xs text-[var(--text-secondary)] mt-1">
+                                            View and compare detailed marks with classmates from your college
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={consentMarksVisibility}
+                                        onClick={() => setConsentMarksVisibility(!consentMarksVisibility)}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-background ${
+                                            consentMarksVisibility ? 'bg-rose-500' : 'bg-(--card-border)'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                consentMarksVisibility ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
+
+                                {/* Display Mode Selector */}
+                                <div className="p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                                    <p className="text-sm font-medium text-[var(--text-primary)] mb-3">
+                                        Identity Display
+                                    </p>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="displayMode"
+                                                value="anonymous"
+                                                checked={displayMode === 'anonymous'}
+                                                onChange={(e) => setDisplayMode(e.target.value as any)}
+                                                className="w-4 h-4 text-rose-500 focus:ring-rose-500"
+                                            />
+                                            <div>
+                                                <span className="text-sm text-[var(--text-primary)]">Anonymous</span>
+                                                <p className="text-xs text-[var(--text-secondary)]">Your name is hidden</p>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="displayMode"
+                                                value="pseudonymous"
+                                                checked={displayMode === 'pseudonymous'}
+                                                onChange={(e) => setDisplayMode(e.target.value as any)}
+                                                className="w-4 h-4 text-rose-500 focus:ring-rose-500"
+                                            />
+                                            <div>
+                                                <span className="text-sm text-[var(--text-primary)]">Pseudonymous</span>
+                                                <p className="text-xs text-[var(--text-secondary)]">Show as "Student-XXXXXX"</p>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="displayMode"
+                                                value="visible"
+                                                checked={displayMode === 'visible'}
+                                                onChange={(e) => setDisplayMode(e.target.value as any)}
+                                                className="w-4 h-4 text-rose-500 focus:ring-rose-500"
+                                            />
+                                            <div>
+                                                <span className="text-sm text-[var(--text-primary)]">Visible</span>
+                                                <p className="text-xs text-[var(--text-secondary)]">Show your real name</p>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -651,7 +759,7 @@ export default function OnboardingPage() {
                                         role="checkbox"
                                         aria-checked={acknowledgeVoluntary}
                                         onClick={() => setAcknowledgeVoluntary(!acknowledgeVoluntary)}
-                                        className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                                        className={`mt-0.5 shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
                                             acknowledgeVoluntary
                                                 ? 'bg-rose-500 border-rose-500'
                                                 : 'bg-transparent border-[var(--text-secondary)] hover:border-rose-500'

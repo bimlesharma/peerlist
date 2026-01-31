@@ -9,8 +9,7 @@ import Link from 'next/link';
 
 interface PeerData {
     id: string;
-    name: string;
-    enrollment_no: string;
+    display_name: string | null;
     batch: string | null;
     branch: string | null;
     college: string | null;
@@ -32,8 +31,7 @@ export function PeersClient({ student, peersData }: PeersClientProps) {
     const filteredPeers = peersData.filter(peer => {
         const query = searchQuery.toLowerCase();
         return (
-            peer.name?.toLowerCase().includes(query) ||
-            peer.enrollment_no?.toLowerCase().includes(query) ||
+            peer.display_name?.toLowerCase().includes(query) ||
             peer.branch?.toLowerCase().includes(query) ||
             peer.college?.toLowerCase().includes(query)
         );
@@ -176,13 +174,10 @@ export function PeersClient({ student, peersData }: PeersClientProps) {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold text-[var(--text-primary)] truncate group-hover:text-rose-500 transition-colors">
-                                            {peer.name || 'Student'}
+                                            {peer.display_name || 'Student'}
                                         </h3>
                                         <ExternalLink className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
-                                    <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
-                                        {peer.enrollment_no}
-                                    </p>
                                     {peer.branch && (
                                         <p className="text-xs text-[var(--text-secondary)] mt-1 truncate">
                                             {peer.branch}

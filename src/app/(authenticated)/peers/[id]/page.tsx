@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { PeerDashboardClient } from './PeerDashboardClient';
-import type { AcademicRecord, Subject } from '@/types';
+import type { Subject } from '@/types';
 
-interface RecordWithSubjects extends AcademicRecord {
+interface RecordWithSubjects {
+    id: string;
+    student_id: string;
+    semester: number;
     subjects: Subject[];
 }
 
@@ -37,32 +40,51 @@ export default async function PeerDashboardPage({ params }: PageProps) {
         redirect('/peers');
     }
 
-    // Get the peer's profile
-    const { data: peerStudent } = await supabase
-        .from('students')
-        .select('*')
-        .eq('id', peerId)
-        .eq('marks_visibility', true)
-        .single();
+    // Get the peer's profile (mutual consent + marks visibility enforced in RPC)
+    const { data: peerProfile } = await supabase.rpc('get_peer_profile', { peer_id: peerId });
+    const peerStudent = peerProfile?.[0];
 
     if (!peerStudent) {
         notFound();
     }
 
-    // Get the peer's academic records
-    const { data: records } = await supabase
-        .from('academic_records')
-        .select(`
-            *,
-            subjects (*)
-        `)
-        .eq('student_id', peerId)
-        .order('semester', { ascending: true });
+    // Get the peer's subjects (mutual consent + marks visibility enforced in RPC)
+    const { data: subjectRows } = await supabase.rpc('get_peer_subjects', { peer_id: peerId });
+
+    const recordsMap = new Map<number, RecordWithSubjects>();
+    (subjectRows || []).forEach((row: any) => {
+        const semester = row.semester as number;
+        if (!recordsMap.has(semester)) {
+            recordsMap.set(semester, {
+                id: row.record_id,
+                student_id: row.student_id,
+                semester,
+                subjects: [],
+            });
+        }
+
+        recordsMap.get(semester)!.subjects.push({
+            id: row.subject_id,
+            record_id: row.record_id,
+            code: row.code,
+            name: row.name,
+            internal_marks: row.internal_marks,
+            external_marks: row.external_marks,
+            max_internal: row.max_internal,
+            max_external: row.max_external,
+            total_marks: row.total_marks,
+            credits: row.credits,
+            grade: row.grade,
+            grade_point: row.grade_point,
+        });
+    });
+
+    const records = Array.from(recordsMap.values()).sort((a, b) => a.semester - b.semester);
 
     return (
         <PeerDashboardClient
             peer={peerStudent}
-            records={(records as RecordWithSubjects[]) || []}
+            records={records}
         />
     );
 }

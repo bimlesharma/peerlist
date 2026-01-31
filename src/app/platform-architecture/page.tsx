@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { Code, ArrowDown, ArrowUp, ArrowLeftRight, Globe, Settings, Lock, Database, GraduationCap } from 'lucide-react';
+import { PublicNavbar } from '@/components/PublicNavbar';
 
 export default function PlatformArchitecturePage() {
     return (
-        <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+        <>
+            <PublicNavbar />
+            <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
             <section className="max-w-5xl mx-auto px-4 py-16">
                 <div className="flex items-center gap-3 mb-3 text-rose-500">
                     <Code className="w-6 h-6" />
@@ -179,5 +182,6 @@ export default function PlatformArchitecturePage() {
                 </div>
             </section>
         </main>
+        </>
     );
 }

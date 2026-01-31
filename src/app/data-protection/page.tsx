@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { ShieldCheck, Lock, Server, Database } from 'lucide-react';
+import { PublicNavbar } from '@/components/PublicNavbar';
 
 export default function DataProtectionPage() {
     return (
-        <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+        <>
+            <PublicNavbar />
+            <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
             <section className="max-w-4xl mx-auto px-4 py-16">
                 <div className="flex items-center gap-3 mb-3 text-rose-500">
                     <ShieldCheck className="w-6 h-6" />
@@ -61,5 +64,6 @@ export default function DataProtectionPage() {
                 </div>
             </section>
         </main>
+        </>
     );
 }

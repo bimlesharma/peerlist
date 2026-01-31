@@ -21,6 +21,7 @@ import {
     BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
+import { PublicNavbar } from '@/components/PublicNavbar';
 
 export default function LandingPage() {
     const supabase = createClient();
@@ -111,29 +112,23 @@ export default function LandingPage() {
 
     return (
         <div className="min-h-screen bg-[var(--bg)]">
-            {/* Navigation */}
-            <nav className="sticky top-0 z-40 border-b border-[var(--card-border)] bg-[var(--card-bg)]/95 backdrop-blur-md">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-                            <GraduationCap className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="font-bold text-[var(--text-primary)] text-lg">PeerList</span>
-                    </div>
-                    <button
-                        onClick={handleGitHubSignIn}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-medium rounded-lg transition-all disabled:opacity-50"
-                    >
-                        {loading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Github className="w-4 h-4" />
-                        )}
-                        Sign In
-                    </button>
-                </div>
-            </nav>
+            <PublicNavbar />
+
+            {/* CTA Button (Sign In) */}
+            <div className="max-w-7xl mx-auto px-4 py-4 flex justify-end">
+                <button
+                    onClick={handleGitHubSignIn}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-medium rounded-lg transition-all disabled:opacity-50"
+                >
+                    {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <Github className="w-4 h-4" />
+                    )}
+                    Sign In
+                </button>
+            </div>
 
             {/* Hero Section */}
             <section className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
@@ -354,6 +349,17 @@ export default function LandingPage() {
                     <p className="text-[var(--text-muted)] text-xs mb-3">
                         Not affiliated with Guru Gobind Singh Indraprastha University • Open Source Initiative
                     </p>
+                    <div className="flex items-center justify-center gap-2 text-xs mb-3 flex-wrap">
+                        <Link href="/privacy-policy" className="text-rose-500 hover:text-rose-600 transition-colors">Privacy Policy</Link>
+                        <span className="text-[var(--text-muted)]">•</span>
+                        <Link href="/terms-of-service" className="text-rose-500 hover:text-rose-600 transition-colors">Terms of Service</Link>
+                        <span className="text-[var(--text-muted)]">•</span>
+                        <Link href="/data-protection" className="text-rose-500 hover:text-rose-600 transition-colors">Data Protection</Link>
+                        <span className="text-[var(--text-muted)]">•</span>
+                        <Link href="/platform-architecture" className="text-rose-500 hover:text-rose-600 transition-colors">Platform Architecture</Link>
+                        <span className="text-[var(--text-muted)]">•</span>
+                        <a href="https://github.com/bimlesh1/peerlist" target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:text-rose-600 transition-colors">Source Code</a>
+                    </div>
                     <p className="text-[var(--text-muted)] text-xs">
                         © 2026 PeerList. All rights reserved. | 
                         <a href="https://github.com/bimlesh1/peerlist" target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:text-rose-600 ml-1">GitHub</a>

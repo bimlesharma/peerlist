@@ -411,13 +411,13 @@ export default function OnboardingPage() {
                     {/* Step 1: IPU Login */}
                     {step === 'ipu-login' && (
                         <form onSubmit={handleIPULogin} className="card p-6 space-y-4 animate-fade-in-up stagger-1">
-                            <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--primary)] bg-opacity-10 text-[var(--primary)]">
-                                <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-                                <p className="text-sm">Your credentials are sent directly to the official IPU server and are never stored.</p>
+                            <div className="flex items-center gap-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                                <ShieldCheck className="w-5 h-5 flex-shrink-0 text-rose-500" />
+                                <p className="text-sm text-[var(--text-primary)]">Your credentials are sent directly to the official IPU server and are never stored.</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
                                     Enrollment Number
                                 </label>
                                 <input
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
                                     IPU Portal Password
                                 </label>
                                 <input
@@ -447,7 +447,7 @@ export default function OnboardingPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
                                     Captcha
                                 </label>
                                 <div className="flex items-center gap-2 mb-2">
@@ -458,15 +458,15 @@ export default function OnboardingPage() {
                                             className="h-10 rounded border border-[var(--card-border)]"
                                         />
                                     ) : (
-                                        <div className="h-10 w-24 bg-[var(--secondary)] rounded flex items-center justify-center">
-                                            <Loader2 className="w-4 h-4 animate-spin text-[var(--text-muted)]" />
+                                        <div className="h-10 w-24 bg-[var(--secondary)] rounded border border-[var(--card-border)] flex items-center justify-center">
+                                            <Loader2 className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />
                                         </div>
                                     )}
                                     <button
                                         type="button"
                                         onClick={fetchCaptcha}
                                         disabled={loading}
-                                        className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                                        className="p-2 text-[var(--text-secondary)] hover:text-rose-500 transition-colors rounded-lg hover:bg-[var(--hover-bg)]"
                                         title="Refresh captcha"
                                     >
                                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -507,8 +507,8 @@ export default function OnboardingPage() {
                     {step === 'fetching' && (
                         <div className="card p-8 animate-fade-in-up">
                             <div className="flex flex-col items-center justify-center">
-                                <Loader2 className="w-12 h-12 animate-spin text-[var(--primary)] mb-4" />
-                                <p className="text-[var(--text-secondary)] text-center">{fetchProgress}</p>
+                                <Loader2 className="w-12 h-12 animate-spin text-rose-500 mb-4" />
+                                <p className="text-[var(--text-primary)] text-center font-medium">{fetchProgress}</p>
                             </div>
                         </div>
                     )}
@@ -517,27 +517,41 @@ export default function OnboardingPage() {
                     {step === 'review' && (
                         <div className="card p-6 space-y-4 animate-fade-in-up stagger-1">
                             <div className="p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
-                                <h3 className="font-medium text-[var(--text-primary)] mb-2">{studentName}</h3>
-                                <div className="space-y-1 text-sm text-[var(--text-secondary)]">
-                                    <p>Enrollment: {enrollmentNo}</p>
-                                    {studentInstitute && <p>Institute: {studentInstitute}</p>}
-                                    {studentProgram && <p>Program: {studentProgram}</p>}
-                                    {studentBatch && <p>Batch: {studentBatch}</p>}
+                                <h3 className="font-semibold text-[var(--text-primary)] mb-2">{studentName}</h3>
+                                <div className="space-y-1.5 text-sm">
+                                    <p className="text-[var(--text-primary)]">
+                                        <span className="text-[var(--text-secondary)]">Enrollment:</span> {enrollmentNo}
+                                    </p>
+                                    {studentInstitute && (
+                                        <p className="text-[var(--text-primary)]">
+                                            <span className="text-[var(--text-secondary)]">Institute:</span> {studentInstitute}
+                                        </p>
+                                    )}
+                                    {studentProgram && (
+                                        <p className="text-[var(--text-primary)]">
+                                            <span className="text-[var(--text-secondary)]">Program:</span> {studentProgram}
+                                        </p>
+                                    )}
+                                    {studentBatch && (
+                                        <p className="text-[var(--text-primary)]">
+                                            <span className="text-[var(--text-secondary)]">Batch:</span> {studentBatch}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <h4 className="text-sm font-medium text-[var(--text-primary)]">
+                                <h4 className="text-sm font-semibold text-[var(--text-primary)]">
                                     Academic Records Found
                                 </h4>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <div className="p-3 rounded-lg bg-[var(--secondary)] text-center">
-                                        <p className="text-2xl font-bold text-[var(--primary)]">{semesterResults.length}</p>
-                                        <p className="text-xs text-[var(--text-muted)]">Semesters</p>
+                                    <div className="p-3 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)] text-center">
+                                        <p className="text-2xl font-bold text-rose-500">{semesterResults.length}</p>
+                                        <p className="text-xs font-medium text-[var(--text-secondary)]">Semesters</p>
                                     </div>
-                                    <div className="p-3 rounded-lg bg-[var(--secondary)] text-center">
-                                        <p className="text-2xl font-bold text-[var(--primary)]">{totalSubjects}</p>
-                                        <p className="text-xs text-[var(--text-muted)]">Subjects</p>
+                                    <div className="p-3 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)] text-center">
+                                        <p className="text-2xl font-bold text-rose-500">{totalSubjects}</p>
+                                        <p className="text-xs font-medium text-[var(--text-secondary)]">Subjects</p>
                                     </div>
                                 </div>
                             </div>
@@ -549,7 +563,7 @@ export default function OnboardingPage() {
                                             <span className="text-sm font-medium text-[var(--text-primary)]">
                                                 Semester {sem.semester}
                                             </span>
-                                            <span className="text-xs text-[var(--text-muted)]">
+                                            <span className="text-xs font-medium text-[var(--text-secondary)]">
                                                 {sem.subjects.length} subjects
                                             </span>
                                         </div>
@@ -570,65 +584,93 @@ export default function OnboardingPage() {
                     {/* Step 4: Consent */}
                     {step === 'consent' && (
                         <div className="card p-6 space-y-6 animate-fade-in-up stagger-1">
-                            <div className="space-y-3">
-                                <h3 className="text-sm font-medium text-[var(--text-primary)]">
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-[var(--text-primary)]">
                                     Privacy Settings
                                 </h3>
 
-                                <label className="flex items-start gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={consentAnalytics}
-                                        onChange={(e) => setConsentAnalytics(e.target.checked)}
-                                        className="mt-1 w-4 h-4 rounded accent-[var(--primary)]"
-                                    />
-                                    <div>
-                                        <span className="text-sm text-[var(--text-primary)]">
+                                {/* Analytics Toggle */}
+                                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">
                                             Enable Personal Analytics
-                                        </span>
-                                        <p className="text-xs text-[var(--text-muted)]">
+                                        </p>
+                                        <p className="text-xs text-[var(--text-secondary)] mt-1">
                                             View your SGPA/CGPA trends and grade distributions
                                         </p>
                                     </div>
-                                </label>
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={consentAnalytics}
+                                        onClick={() => setConsentAnalytics(!consentAnalytics)}
+                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-[var(--background)] ${
+                                            consentAnalytics ? 'bg-rose-500' : 'bg-[var(--card-border)]'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                consentAnalytics ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
 
-                                <label className="flex items-start gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={consentRankboard}
-                                        onChange={(e) => setConsentRankboard(e.target.checked)}
-                                        className="mt-1 w-4 h-4 rounded accent-[var(--primary)]"
-                                    />
-                                    <div>
-                                        <span className="text-sm text-[var(--text-primary)]">
+                                {/* Rankboard Toggle */}
+                                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">
                                             Participate in Rankboard
-                                        </span>
-                                        <p className="text-xs text-[var(--text-muted)]">
+                                        </p>
+                                        <p className="text-xs text-[var(--text-secondary)] mt-1">
                                             Compare with peers (anonymous by default)
                                         </p>
                                     </div>
-                                </label>
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        aria-checked={consentRankboard}
+                                        onClick={() => setConsentRankboard(!consentRankboard)}
+                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-[var(--background)] ${
+                                            consentRankboard ? 'bg-rose-500' : 'bg-[var(--card-border)]'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                consentRankboard ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="pt-4 border-t border-[var(--card-border)]">
-                                <label className="flex items-start gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={acknowledgeVoluntary}
-                                        onChange={(e) => setAcknowledgeVoluntary(e.target.checked)}
-                                        className="mt-1 w-4 h-4 rounded accent-[var(--primary)]"
-                                        required
-                                    />
+                                <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                                    <button
+                                        type="button"
+                                        role="checkbox"
+                                        aria-checked={acknowledgeVoluntary}
+                                        onClick={() => setAcknowledgeVoluntary(!acknowledgeVoluntary)}
+                                        className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                                            acknowledgeVoluntary
+                                                ? 'bg-rose-500 border-rose-500'
+                                                : 'bg-transparent border-[var(--text-secondary)] hover:border-rose-500'
+                                        }`}
+                                    >
+                                        {acknowledgeVoluntary && (
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                        )}
+                                    </button>
                                     <div>
-                                        <span className="text-sm text-[var(--text-primary)]">
-                                            I acknowledge voluntary submission <span className="text-[var(--error)]">*</span>
-                                        </span>
-                                        <p className="text-xs text-[var(--text-muted)]">
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">
+                                            I acknowledge voluntary submission <span className="text-rose-500">*</span>
+                                        </p>
+                                        <p className="text-xs text-[var(--text-secondary)] mt-1">
                                             I understand that I am submitting my academic data voluntarily and
                                             this platform is not affiliated with any university.
                                         </p>
                                     </div>
-                                </label>
+                                </div>
                             </div>
 
                             <div className="flex gap-3">

@@ -91,8 +91,17 @@ CREATE POLICY "Users can delete own profile" ON students
   FOR DELETE USING (auth.uid() = id);
 
 -- Academic Records: Users can only access their own records
+-- PLUS: Opted-in rankboard users can view other opted-in users' records
 CREATE POLICY "Users can view own records" ON academic_records
-  FOR SELECT USING (auth.uid() = student_id);
+  FOR SELECT USING (
+    auth.uid() = student_id
+    OR
+    (
+      EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND consent_rankboard = true)
+      AND
+      EXISTS (SELECT 1 FROM students WHERE id = student_id AND consent_rankboard = true)
+    )
+  );
 
 CREATE POLICY "Users can insert own records" ON academic_records
   FOR INSERT WITH CHECK (auth.uid() = student_id);
@@ -101,9 +110,20 @@ CREATE POLICY "Users can delete own records" ON academic_records
   FOR DELETE USING (auth.uid() = student_id);
 
 -- Subjects: Users can only access subjects in their own records
+-- PLUS: Opted-in rankboard users can view other opted-in users' subjects
 CREATE POLICY "Users can view own subjects" ON subjects
   FOR SELECT USING (
     record_id IN (SELECT id FROM academic_records WHERE student_id = auth.uid())
+    OR
+    (
+      EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND consent_rankboard = true)
+      AND
+      record_id IN (
+        SELECT ar.id FROM academic_records ar
+        JOIN students s ON ar.student_id = s.id
+        WHERE s.consent_rankboard = true
+      )
+    )
   );
 
 CREATE POLICY "Users can insert own subjects" ON subjects

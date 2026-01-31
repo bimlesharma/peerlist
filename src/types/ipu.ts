@@ -10,6 +10,7 @@ export interface IPUResult {
     prgname?: string;  // Alternative program name field
     batch?: string;
     yoa?: string;  // Year of admission (alternative batch field)
+    byoa?: string;  // Another alternative for batch/year of admission
     papercode: string;
     papername: string;
     minorprint: string;  // Internal marks
@@ -20,6 +21,7 @@ export interface IPUResult {
     semname?: string;
     euno?: number | string;  // Semester number (1-8)
     credits?: string | number;
+    stimage?: string;  // Student profile image (base64)
 }
 
 export interface CaptchaResponse {

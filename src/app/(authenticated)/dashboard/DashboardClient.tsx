@@ -1,14 +1,29 @@
 'use client';
 
-import { StatsCard } from '@/components/StatsCard';
-import { SGPATrendChart, GradeDistributionChart, SemesterCreditsChart } from '@/components/Charts';
-import { calculateSGPA, calculateCGPA, getGradeDistribution, getCGPADivision, getSemesterName } from '@/lib/grading';
+import { useState } from 'react';
+import { DashboardHeader } from '@/components/DashboardHeader';
+import { ResultTable, SemesterSummaryTable } from '@/components/ResultTable';
+import { SemesterStats, OverallStats } from '@/components/SemesterStats';
+import { SGPATrendChart, GradeDistributionChart, SubjectRadarChart, SemesterMarksChart } from '@/components/PerformanceCharts';
+import { SubjectMarksStackedBarChart } from '@/components/SubjectMarksStackedBarChart';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { marksToGrade, calculateSGPA, calculateCGPA, getGradeDistribution, getSemesterName } from '@/lib/grading';
 import type { Student, AcademicRecord, Subject } from '@/types';
-import { GraduationCap, TrendingUp, Award, BookOpen, FileText, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
 
 interface RecordWithSubjects extends AcademicRecord {
     subjects: Subject[];
+}
+
+interface ProcessedSemester {
+    semester: string;
+    semesterNumber: number;
+    subjects: Subject[];
+    sgpa: number;
+    totalCredits: number;
+    totalSubjects: number;
+    totalMarks: number;
+    maxMarks: number;
 }
 
 interface DashboardClientProps {
@@ -17,182 +32,200 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ student, records }: DashboardClientProps) {
-    // Calculate analytics
-    const allSubjects = records.flatMap(r => r.subjects);
-
-    const semesterStats = records.map(record => {
-        const { sgpa, totalCredits } = calculateSGPA(record.subjects);
-        return {
-            semester: getSemesterName(record.semester),
-            semesterNum: record.semester,
-            sgpa,
-            credits: totalCredits,
-            subjectCount: record.subjects.length,
-        };
-    });
-
-    const cgpa = calculateCGPA(
-        semesterStats.map(s => ({ sgpa: s.sgpa, totalCredits: s.credits }))
-    );
-
-    const totalCredits = semesterStats.reduce((sum, s) => sum + s.credits, 0);
-    const gradeDistribution = getGradeDistribution(allSubjects);
-    const division = getCGPADivision(cgpa);
-
-    // Prepare chart data
-    const sgpaTrendData = semesterStats.map(s => ({
-        semester: `Sem ${s.semesterNum}`,
-        sgpa: s.sgpa,
-    }));
-
-    const creditsChartData = semesterStats.map(s => ({
-        semester: `Sem ${s.semesterNum}`,
-        credits: s.credits,
-        sgpa: s.sgpa,
-    }));
+    const [activeTab, setActiveTab] = useState('Overall');
 
     const hasData = records.length > 0;
 
-    return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Welcome Header */}
-            <div className="mb-8 animate-fade-in-up">
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-                    Welcome back, {student.name || 'Student'}
-                </h1>
-                <p className="text-[var(--text-secondary)] mt-1">
-                    {student.enrollment_no} • {student.branch || 'Branch not set'} • {student.batch || 'Batch not set'}
-                </p>
-            </div>
+    // Process semester data
+    const processed: ProcessedSemester[] = records.map(record => {
+        const { sgpa, totalCredits } = calculateSGPA(record.subjects);
+        const totalMarks = record.subjects.reduce((sum, s) => sum + s.total_marks, 0);
+        const maxMarks = record.subjects.length * 100;
 
-            {!hasData ? (
-                /* Empty State */
-                <div className="card p-12 text-center animate-fade-in-up stagger-1">
-                    <div className="p-4 rounded-full bg-[var(--primary)] bg-opacity-10 w-fit mx-auto mb-4">
-                        <AlertCircle className="w-10 h-10 text-[var(--primary)]" />
+        return {
+            semester: getSemesterName(record.semester),
+            semesterNumber: record.semester,
+            subjects: record.subjects,
+            sgpa,
+            totalCredits,
+            totalSubjects: record.subjects.length,
+            totalMarks,
+            maxMarks,
+        };
+    });
+
+    // Calculate overall stats
+    const allSubjects = records.flatMap(r => r.subjects);
+    const cgpa = calculateCGPA(processed.map(p => ({ sgpa: p.sgpa, totalCredits: p.totalCredits })));
+    const gradeDistribution = getGradeDistribution(allSubjects);
+    const totalCredits = processed.reduce((sum, p) => sum + p.totalCredits, 0);
+
+    // Student info from profile
+    const studentName = student.name || 'Student';
+    const enrollmentNo = student.enrollment_no || 'N/A';
+    const institute = student.college || 'N/A';
+    const program = student.branch || 'N/A';
+    const admissionYear = student.batch || 'N/A';
+
+    // Tabs
+    const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+    const tabs = ['Overall', ...processed.map(p => `Sem ${p.semesterNumber}`)];
+    const tabsMobile = ['All', ...processed.map(p => romanNumerals[p.semesterNumber - 1] || `${p.semesterNumber}`)];
+
+    // Current View Data
+    const currentSemData = activeTab !== 'Overall'
+        ? processed.find(p => `Sem ${p.semesterNumber}` === activeTab)
+        : null;
+
+    // Radar Data for specific semester
+    const radarData = currentSemData?.subjects.map(sub => ({
+        subject: sub.code,
+        marks: sub.total_marks || 0,
+        fullMark: 100
+    })) || [];
+
+    // Calculate semester-wise grade distribution
+    const semesterGradeDistribution = currentSemData ? (() => {
+        const distribution = new Map<string, number>();
+        currentSemData.subjects.forEach(sub => {
+            const grade = sub.grade || marksToGrade(sub.total_marks);
+            distribution.set(grade, (distribution.get(grade) || 0) + 1);
+        });
+        return Array.from(distribution.entries()).map(([grade, count]) => ({
+            grade,
+            count,
+            color: ''
+        }));
+    })() : [];
+
+    // Fake refresh handler (data is server-rendered)
+    const handleRefresh = () => {
+        window.location.reload();
+    };
+
+    if (!hasData) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 sm:gap-6 animate-fade-in-up px-4">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-rose-500/20 rounded-full blur-xl" />
+                        <AlertCircle className="relative w-12 h-12 sm:w-16 sm:h-16 text-rose-500" />
                     </div>
-                    <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-                        No Academic Data Found
-                    </h2>
-                    <p className="text-[var(--text-secondary)] mb-6 max-w-md mx-auto">
-                        Your academic records may not have been fetched properly during registration.
-                        Please contact support if you believe this is an error.
-                    </p>
+                    <div className="text-center">
+                        <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">No Academic Data Found</h2>
+                        <p className="text-[var(--text-secondary)] max-w-md mx-auto">
+                            Your academic records may not have been fetched properly during registration.
+                            Please contact support if you believe this is an error.
+                        </p>
+                    </div>
                 </div>
-            ) : (
-                <>
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div className="animate-fade-in-up stagger-1">
-                            <StatsCard
-                                title="CGPA"
-                                value={cgpa.toFixed(2)}
-                                subtitle={division}
-                                icon={GraduationCap}
-                                color="primary"
-                            />
-                        </div>
-                        <div className="animate-fade-in-up stagger-2">
-                            <StatsCard
-                                title="Latest SGPA"
-                                value={semesterStats[semesterStats.length - 1]?.sgpa.toFixed(2) || '0.00'}
-                                subtitle={semesterStats[semesterStats.length - 1]?.semester}
-                                icon={TrendingUp}
-                                color="success"
-                            />
-                        </div>
-                        <div className="animate-fade-in-up stagger-3">
-                            <StatsCard
-                                title="Total Credits"
-                                value={totalCredits}
-                                subtitle={`${records.length} semester${records.length > 1 ? 's' : ''}`}
-                                icon={Award}
-                                color="warning"
-                            />
-                        </div>
-                        <div className="animate-fade-in-up stagger-4">
-                            <StatsCard
-                                title="Subjects"
-                                value={allSubjects.length}
-                                subtitle={`Best: ${gradeDistribution[0]?.grade || 'N/A'}`}
-                                icon={BookOpen}
-                                color="primary"
-                            />
-                        </div>
-                    </div>
+            </div>
+        );
+    }
 
-                    {/* Charts Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div className="animate-fade-in-up stagger-3">
-                            <SGPATrendChart data={sgpaTrendData} />
-                        </div>
-                        <div className="animate-fade-in-up stagger-4">
-                            <GradeDistributionChart data={gradeDistribution} />
-                        </div>
-                    </div>
+    return (
+        <main className="min-h-screen bg-[var(--background)]">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16 sm:pb-20">
+                <DashboardHeader
+                    studentName={studentName}
+                    enrollmentNo={enrollmentNo}
+                    institute={institute}
+                    program={program}
+                    batch={admissionYear}
+                    profileImage={student.avatar_url || undefined}
+                    onRefresh={handleRefresh}
+                />
 
-                    {/* Credits Chart */}
-                    <div className="mb-8 animate-fade-in-up stagger-5">
-                        <SemesterCreditsChart data={creditsChartData} />
-                    </div>
+                {/* Tabs */}
+                <div className="grid grid-cols-8 sm:flex sm:overflow-x-auto gap-1 sm:gap-2 py-4 sm:py-6 sm:pl-1 no-scrollbar animate-fade-in-up">
+                    {tabs.map((tab, index) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={cn(
+                                "px-1 sm:px-5 py-2 sm:py-2 rounded-lg text-[10px] sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap btn-shine ripple",
+                                activeTab === tab
+                                    ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30 sm:scale-105"
+                                    : "bg-[var(--secondary)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)] border border-[var(--card-border)] hover:border-rose-500/30 sm:hover:scale-102"
+                            )}
+                            style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                            <span className="sm:hidden">{tabsMobile[index]}</span>
+                            <span className="hidden sm:inline">{tab}</span>
+                        </button>
+                    ))}
+                </div>
 
-                    {/* Semester Summary Table */}
-                    <div className="card overflow-hidden animate-fade-in-up stagger-5">
-                        <div className="p-4 border-b border-[var(--card-border)]">
-                            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                                Semester Summary
-                            </h3>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Semester</th>
-                                        <th>Subjects</th>
-                                        <th>Credits</th>
-                                        <th>SGPA</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {semesterStats.map((sem) => (
-                                        <tr key={sem.semesterNum}>
-                                            <td className="font-medium text-[var(--text-primary)]">
-                                                {sem.semester}
-                                            </td>
-                                            <td className="text-[var(--text-secondary)]">
-                                                {sem.subjectCount}
-                                            </td>
-                                            <td className="text-[var(--text-secondary)]">
-                                                {sem.credits}
-                                            </td>
-                                            <td>
-                                                <span className="font-semibold text-[var(--primary)]">
-                                                    {sem.sgpa.toFixed(2)}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Consent Notice */}
-                    {!student.consent_analytics && (
-                        <div className="mt-6 p-4 rounded-lg bg-[var(--warning)] bg-opacity-10 border border-[var(--warning)] border-opacity-20 flex items-start gap-3 animate-fade-in-up">
-                            <AlertCircle className="w-5 h-5 text-[var(--warning)] flex-shrink-0 mt-0.5" />
-                            <div>
-                                <p className="text-sm text-[var(--text-primary)]">
-                                    Analytics are currently disabled.
-                                </p>
-                                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                                    Enable analytics in <Link href="/settings" className="text-[var(--primary)] hover:underline">Settings</Link> to view your performance insights.
-                                </p>
+                {/* Content Area */}
+                <div key={activeTab} className="space-y-4 sm:space-y-6 md:space-y-8 animate-blur-in">
+                    {activeTab === 'Overall' ? (
+                        <>
+                            <OverallStats
+                                totalObtained={processed.reduce((sum, sem) => sum + sem.totalMarks, 0)}
+                                totalMax={processed.reduce((sum, sem) => sum + sem.maxMarks, 0)}
+                                cgpa={cgpa}
+                                totalCredits={totalCredits}
+                                totalSubjects={allSubjects.length}
+                                totalSemesters={processed.length}
+                                semesterNumbers={processed.map(p => p.semesterNumber)}
+                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <SGPATrendChart
+                                    data={processed.map(p => ({
+                                        semester: p.semester,
+                                        semesterNumber: p.semesterNumber,
+                                        sgpa: p.sgpa,
+                                        totalSubjects: p.totalSubjects,
+                                        totalCredits: p.totalCredits,
+                                    }))}
+                                    onSelectSemester={(semNum) => setActiveTab(`Sem ${semNum}`)}
+                                />
+                                <GradeDistributionChart grades={gradeDistribution} />
                             </div>
-                        </div>
-                    )}
-                </>
-            )}
-        </div>
+                            <SemesterMarksChart
+                                data={processed}
+                                onSelectSemester={(semNum) => setActiveTab(`Sem ${semNum}`)}
+                            />
+                            <SemesterSummaryTable
+                                data={processed}
+                                onSelectSemester={(semNum) => setActiveTab(`Sem ${semNum}`)}
+                            />
+                        </>
+                    ) : currentSemData ? (
+                        <>
+                            <SemesterStats
+                                totalMarks={currentSemData.totalMarks}
+                                maxMarks={currentSemData.maxMarks}
+                                sgpa={currentSemData.sgpa}
+                                credits={currentSemData.totalCredits}
+                                semesterNumber={currentSemData.semesterNumber}
+                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <GradeDistributionChart grades={semesterGradeDistribution} />
+                                <SubjectRadarChart data={radarData} />
+                            </div>
+                            <SubjectMarksStackedBarChart
+                                data={currentSemData.subjects.map(s => ({
+                                    subject: s.code,
+                                    subjectName: s.name,
+                                    internal: s.internal_marks || 0,
+                                    external: s.external_marks || 0,
+                                    total: s.total_marks || 0
+                                }))}
+                            />
+                            <ResultTable
+                                results={currentSemData.subjects.map(s => ({
+                                    papercode: s.code,
+                                    papername: s.name,
+                                    minorprint: String(s.internal_marks || 0),
+                                    majorprint: String(s.external_marks || 0),
+                                    moderatedprint: String(s.total_marks || 0),
+                                }))}
+                            />
+                        </>
+                    ) : null}
+                </div>
+            </div>
+        </main>
     );
 }

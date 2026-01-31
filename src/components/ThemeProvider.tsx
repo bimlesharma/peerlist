@@ -6,6 +6,7 @@ type Theme = 'dark' | 'light';
 
 interface ThemeContextValue {
     theme: Theme;
+    resolvedTheme: Theme;
     toggleTheme: () => void;
 }
 
@@ -38,7 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, resolvedTheme: theme, toggleTheme }}>
             <div className={mounted ? theme : 'dark'}>
                 {children}
             </div>

@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 import {
     GraduationCap,
     LayoutDashboard,
-    FolderOpen,
     Trophy,
+    Users,
     Settings,
     LogOut,
     Sun,
@@ -21,8 +21,8 @@ import { useState } from 'react';
 
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/records', label: 'Records', icon: FolderOpen },
     { href: '/rankboard', label: 'Rankboard', icon: Trophy },
+    { href: '/peers', label: 'Peers', icon: Users },
     { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { Student } from '@/types';
-import { Trophy, Lock, Users, Filter, AlertCircle, Loader2 } from 'lucide-react';
+import { Trophy, Lock, Users, Filter, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface RankboardEntry {
@@ -26,12 +26,16 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
     const router = useRouter();
     const supabase = createClient();
     const [loading, setLoading] = useState(false);
-    const [batchFilter, setBatchFilter] = useState<string>('all');
-    const [branchFilter, setBranchFilter] = useState<string>('all');
 
-    // Get unique batches and branches for filters
-    const batches = [...new Set(rankboardData.map(r => r.batch).filter(Boolean))] as string[];
-    const branches = [...new Set(rankboardData.map(r => r.branch).filter(Boolean))] as string[];
+    // Set default filters to user's own batch, branch, and college
+    const [batchFilter, setBatchFilter] = useState<string>(student.batch || 'all');
+    const [branchFilter, setBranchFilter] = useState<string>(student.branch || 'all');
+    const [collegeFilter, setCollegeFilter] = useState<string>(student.college || 'all');
+
+    // Get unique batches, branches, and colleges for filters
+    const batches = [...new Set(rankboardData.map(r => r.batch).filter(Boolean))].sort() as string[];
+    const branches = [...new Set(rankboardData.map(r => r.branch).filter(Boolean))].sort() as string[];
+    const colleges = [...new Set(rankboardData.map(r => r.college).filter(Boolean))].sort() as string[];
 
     // Apply filters
     let filteredData = rankboardData;
@@ -41,6 +45,18 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
     if (branchFilter !== 'all') {
         filteredData = filteredData.filter(r => r.branch === branchFilter);
     }
+    if (collegeFilter !== 'all') {
+        filteredData = filteredData.filter(r => r.college === collegeFilter);
+    }
+
+    // Check if any filters are active
+    const hasActiveFilters = batchFilter !== 'all' || branchFilter !== 'all' || collegeFilter !== 'all';
+
+    const clearAllFilters = () => {
+        setBatchFilter('all');
+        setBranchFilter('all');
+        setCollegeFilter('all');
+    };
 
     const handleOptIn = async () => {
         setLoading(true);
@@ -58,16 +74,13 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
         }
     };
 
-    const minParticipants = 5;
-    const hasMinimumParticipants = filteredData.length >= minParticipants;
-
     // Not opted in - show gate
     if (!student.consent_rankboard) {
         return (
             <div className="max-w-2xl mx-auto px-4 py-8">
                 <div className="card p-8 text-center animate-fade-in-up">
-                    <div className="p-4 rounded-full bg-[var(--primary)] bg-opacity-10 w-fit mx-auto mb-4">
-                        <Lock className="w-10 h-10 text-[var(--primary)]" />
+                    <div className="p-4 rounded-full bg-rose-500/10 w-fit mx-auto mb-4">
+                        <Lock className="w-10 h-10 text-rose-500" />
                     </div>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                         Rankboard Access
@@ -83,19 +96,19 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                         </h3>
                         <ul className="text-sm text-[var(--text-secondary)] space-y-2">
                             <li className="flex items-start gap-2">
-                                <span className="text-[var(--success)]">✓</span>
+                                <span className="text-emerald-500">✓</span>
                                 Your CGPA appears on the rankboard
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="text-[var(--success)]">✓</span>
+                                <span className="text-emerald-500">✓</span>
                                 You can see other opted-in students&apos; rankings
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="text-[var(--success)]">✓</span>
+                                <span className="text-emerald-500">✓</span>
                                 Your identity is <strong>anonymous by default</strong>
                             </li>
                             <li className="flex items-start gap-2">
-                                <span className="text-[var(--success)]">✓</span>
+                                <span className="text-emerald-500">✓</span>
                                 You can opt out anytime in Settings
                             </li>
                         </ul>
@@ -128,7 +141,7 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-8 animate-fade-in-up">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)]">
@@ -136,82 +149,88 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                     </h1>
                     <p className="text-[var(--text-secondary)] mt-1">
                         {filteredData.length} participant{filteredData.length !== 1 ? 's' : ''}
+                        {hasActiveFilters && ' (filtered)'}
                     </p>
                 </div>
-                <Link href="/settings" className="text-sm text-[var(--text-muted)] hover:text-[var(--primary)]">
+                <Link href="/settings" className="text-sm text-[var(--text-muted)] hover:text-rose-500 transition-colors">
                     Manage participation →
                 </Link>
             </div>
 
             {/* Filters */}
-            {(batches.length > 0 || branches.length > 0) && (
-                <div className="card p-4 mb-6 animate-fade-in-up stagger-1">
-                    <div className="flex items-center gap-4 flex-wrap">
-                        <div className="flex items-center gap-2">
-                            <Filter className="w-4 h-4 text-[var(--text-muted)]" />
-                            <span className="text-sm text-[var(--text-secondary)]">Filters:</span>
-                        </div>
-
-                        {batches.length > 0 && (
-                            <select
-                                value={batchFilter}
-                                onChange={(e) => setBatchFilter(e.target.value)}
-                                className="input text-sm py-1.5"
-                            >
-                                <option value="all">All Batches</option>
-                                {batches.map(b => (
-                                    <option key={b} value={b}>{b}</option>
-                                ))}
-                            </select>
-                        )}
-
-                        {branches.length > 0 && (
-                            <select
-                                value={branchFilter}
-                                onChange={(e) => setBranchFilter(e.target.value)}
-                                className="input text-sm py-1.5"
-                            >
-                                <option value="all">All Branches</option>
-                                {branches.map(b => (
-                                    <option key={b} value={b}>{b}</option>
-                                ))}
-                            </select>
-                        )}
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 mb-6 animate-fade-in-up stagger-1">
+                <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-rose-500" />
+                        <span className="text-sm font-medium text-[var(--text-primary)]">Filters:</span>
                     </div>
-                </div>
-            )}
 
-            {/* Minimum threshold warning */}
-            {!hasMinimumParticipants && (
-                <div className="p-4 rounded-lg bg-[var(--warning)] bg-opacity-10 border border-[var(--warning)] border-opacity-20 flex items-start gap-3 mb-6 animate-fade-in-up stagger-2">
-                    <AlertCircle className="w-5 h-5 text-[var(--warning)] flex-shrink-0 mt-0.5" />
-                    <div>
-                        <p className="text-sm text-[var(--text-primary)]">
-                            Minimum {minParticipants} participants required
-                        </p>
-                        <p className="text-xs text-[var(--text-secondary)] mt-1">
-                            Rankings are hidden until enough students from your cohort join.
-                            Currently {filteredData.length} participant{filteredData.length !== 1 ? 's' : ''}.
-                        </p>
-                    </div>
+                    {batches.length > 0 && (
+                        <select
+                            value={batchFilter}
+                            onChange={(e) => setBatchFilter(e.target.value)}
+                            className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-primary)] focus:border-rose-500 focus:outline-none transition-colors"
+                        >
+                            <option value="all">All Batches</option>
+                            {batches.map(b => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {branches.length > 0 && (
+                        <select
+                            value={branchFilter}
+                            onChange={(e) => setBranchFilter(e.target.value)}
+                            className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-primary)] focus:border-rose-500 focus:outline-none transition-colors"
+                        >
+                            <option value="all">All Branches</option>
+                            {branches.map(b => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {colleges.length > 0 && (
+                        <select
+                            value={collegeFilter}
+                            onChange={(e) => setCollegeFilter(e.target.value)}
+                            className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-primary)] focus:border-rose-500 focus:outline-none transition-colors"
+                        >
+                            <option value="all">All Colleges</option>
+                            {colleges.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {hasActiveFilters && (
+                        <button
+                            onClick={clearAllFilters}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                        >
+                            <X className="w-3 h-3" />
+                            Clear filters
+                        </button>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Rankboard Table */}
-            {hasMinimumParticipants ? (
-                <div className="card overflow-hidden animate-fade-in-up stagger-2">
+            {filteredData.length > 0 ? (
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden animate-fade-in-up stagger-2">
                     <div className="overflow-x-auto">
-                        <table className="table">
+                        <table className="w-full">
                             <thead>
-                                <tr>
-                                    <th className="w-16">Rank</th>
-                                    <th>Student</th>
-                                    <th>Batch</th>
-                                    <th>Branch</th>
-                                    <th className="text-right">CGPA</th>
+                                <tr className="border-b border-[var(--card-border)] bg-[var(--secondary)]">
+                                    <th className="w-20 px-4 py-4 text-left text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">Rank</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">Student</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider hidden sm:table-cell">Batch</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider hidden md:table-cell">Branch</th>
+                                    <th className="px-4 py-4 text-right text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">CGPA</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-[var(--card-border)]">
                                 {filteredData.map((entry, index) => {
                                     const isCurrentUser = entry.id === currentUserId;
                                     const rank = index + 1;
@@ -219,38 +238,59 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                                     return (
                                         <tr
                                             key={entry.id}
-                                            className={isCurrentUser ? 'bg-[var(--primary)] bg-opacity-5' : ''}
+                                            className={`transition-colors ${isCurrentUser
+                                                ? 'bg-rose-500/10 hover:bg-rose-500/15'
+                                                : 'hover:bg-[var(--hover-bg)]'
+                                            }`}
                                         >
-                                            <td>
+                                            <td className="px-4 py-4">
                                                 <div className="flex items-center gap-2">
                                                     {rank <= 3 ? (
-                                                        <Trophy
-                                                            className={`w-5 h-5 ${rank === 1 ? 'text-yellow-500' :
+                                                        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                                                            rank === 1 ? 'bg-yellow-500/20' :
+                                                            rank === 2 ? 'bg-gray-400/20' :
+                                                            'bg-amber-600/20'
+                                                        }`}>
+                                                            <Trophy
+                                                                className={`w-4 h-4 ${
+                                                                    rank === 1 ? 'text-yellow-500' :
                                                                     rank === 2 ? 'text-gray-400' :
-                                                                        'text-amber-600'
+                                                                    'text-amber-600'
                                                                 }`}
-                                                        />
+                                                            />
+                                                        </div>
                                                     ) : (
-                                                        <span className="text-[var(--text-muted)] font-medium pl-1">
+                                                        <span className="w-8 h-8 flex items-center justify-center text-sm font-bold text-[var(--text-primary)]">
                                                             {rank}
                                                         </span>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className={`font-medium ${isCurrentUser ? 'text-[var(--primary)]' : 'text-[var(--text-primary)]'}`}>
-                                                {entry.display_name}
-                                                {isCurrentUser && (
-                                                    <span className="ml-2 text-xs badge badge-success">You</span>
-                                                )}
+                                            <td className="px-4 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`font-semibold ${isCurrentUser ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>
+                                                        {entry.display_name}
+                                                    </span>
+                                                    {isCurrentUser && (
+                                                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-500 rounded-full">
+                                                            You
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
-                                            <td className="text-[var(--text-secondary)]">
+                                            <td className="px-4 py-4 text-sm text-[var(--text-primary)] hidden sm:table-cell">
                                                 {entry.batch || '-'}
                                             </td>
-                                            <td className="text-[var(--text-secondary)]">
+                                            <td className="px-4 py-4 text-sm text-[var(--text-primary)] hidden md:table-cell">
                                                 {entry.branch || '-'}
                                             </td>
-                                            <td className="text-right">
-                                                <span className="font-bold text-[var(--primary)]">
+                                            <td className="px-4 py-4 text-right">
+                                                <span className={`text-lg font-bold ${
+                                                    entry.cgpa >= 9 ? 'text-yellow-500' :
+                                                    entry.cgpa >= 8 ? 'text-rose-500' :
+                                                    entry.cgpa >= 7 ? 'text-purple-500' :
+                                                    'text-[var(--text-primary)]'
+                                                }`}>
                                                     {entry.cgpa.toFixed(2)}
                                                 </span>
                                             </td>
@@ -262,16 +302,27 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                     </div>
                 </div>
             ) : (
-                <div className="card p-12 text-center animate-fade-in-up stagger-3">
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-12 text-center animate-fade-in-up stagger-3">
                     <div className="p-4 rounded-full bg-[var(--secondary)] w-fit mx-auto mb-4">
                         <Users className="w-10 h-10 text-[var(--text-muted)]" />
                     </div>
                     <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-                        Waiting for More Participants
+                        {hasActiveFilters ? 'No Matching Participants' : 'No Participants Yet'}
                     </h2>
                     <p className="text-[var(--text-secondary)] max-w-md mx-auto">
-                        Share this platform with your classmates to unlock rankings!
+                        {hasActiveFilters
+                            ? 'Try adjusting your filters or clear them to see all participants.'
+                            : 'Be the first to opt-in and share this platform with your classmates!'
+                        }
                     </p>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={clearAllFilters}
+                            className="mt-4 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition-colors"
+                        >
+                            Clear All Filters
+                        </button>
+                    )}
                 </div>
             )}
 

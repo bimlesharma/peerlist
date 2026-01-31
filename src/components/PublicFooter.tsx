@@ -30,7 +30,7 @@ export function PublicFooter() {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-linear-to-r from-transparent via-[var(--card-border)] to-transparent mb-8"></div>
+                <div className="h-px bg-linear-to-r from-transparent via-(--card-border) to-transparent mb-8"></div>
 
                 {/* Bottom Info */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-(--text-muted) text-sm">

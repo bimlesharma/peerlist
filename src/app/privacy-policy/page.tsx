@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
     return (
         <>
             <PublicNavbar />
-            <main className="min-h-screen bg-[var(--bg-primary)] text-(--text-primary)">
+            <main className="min-h-screen bg-(--bg-primary) text-(--text-primary)">
             <section className="max-w-4xl mx-auto px-4 py-16">
                 <div className="flex items-center gap-3 mb-3 text-rose-500">
                     <Shield className="w-6 h-6" />
@@ -78,9 +78,9 @@ export default function PrivacyPolicyPage() {
 
                 <div className="mt-10 flex flex-wrap gap-4">
                     <Link href="/terms-of-service" className="text-rose-500 hover:text-rose-600 font-medium text-sm">Terms of Service</Link>
-                    <span className="text-[var(--card-border)]">•</span>
+                    <span className="text-(--card-border)">•</span>
                     <Link href="/data-protection" className="text-rose-500 hover:text-rose-600 font-medium text-sm">Data Protection</Link>
-                    <span className="text-[var(--card-border)]">•</span>
+                    <span className="text-(--card-border)">•</span>
                     <Link href="/platform-architecture" className="text-rose-500 hover:text-rose-600 font-medium text-sm">Platform Architecture</Link>
                 </div>
             </section>

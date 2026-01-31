@@ -273,7 +273,7 @@ export function SettingsClient({ student, records, consentLogs }: SettingsClient
                                 onChange={(e) => setConsentAnalytics(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className="w-10 h-6 rounded-full bg-[var(--card-border)] peer-checked:bg-rose-500 transition-colors"></div>
+                            <div className="w-10 h-6 rounded-full bg-(--card-border) peer-checked:bg-rose-500 transition-colors"></div>
                             <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md peer-checked:translate-x-4 transition-transform"></div>
                         </div>
                         <div className="flex-1">
@@ -295,7 +295,7 @@ export function SettingsClient({ student, records, consentLogs }: SettingsClient
                                 onChange={(e) => setConsentRankboard(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className="w-10 h-6 rounded-full bg-[var(--card-border)] peer-checked:bg-rose-500 transition-colors"></div>
+                            <div className="w-10 h-6 rounded-full bg-(--card-border) peer-checked:bg-rose-500 transition-colors"></div>
                             <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md peer-checked:translate-x-4 transition-transform"></div>
                         </div>
                         <div className="flex-1">
@@ -373,7 +373,7 @@ export function SettingsClient({ student, records, consentLogs }: SettingsClient
                                 onChange={(e) => handleMarksVisibilityToggle(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className="w-10 h-6 rounded-full bg-[var(--card-border)] peer-checked:bg-amber-500 transition-colors"></div>
+                            <div className="w-10 h-6 rounded-full bg-(--card-border) peer-checked:bg-amber-500 transition-colors"></div>
                             <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md peer-checked:translate-x-4 transition-transform"></div>
                         </div>
                         <div className="flex-1">

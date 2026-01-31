@@ -403,7 +403,7 @@ export default function OnboardingPage() {
     if (checkingProfile) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -414,7 +414,7 @@ export default function OnboardingPage() {
                 <div className="w-full max-w-md">
                     <div className="text-center mb-8 animate-fade-in-up">
                         <div className="flex items-center justify-center gap-2 mb-4">
-                            <GraduationCap className="w-8 h-8 text-[var(--primary)]" />
+                            <GraduationCap className="w-8 h-8 text-primary" />
                             <h1 className="text-2xl font-bold text-gradient">PeerList</h1>
                         </div>
                         <h2 className="text-xl font-semibold text-(--text-primary)">
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-[var(--error)] bg-opacity-10 text-[var(--error)] animate-fade-in">
+                        <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-(--error) bg-opacity-10 text-(--error) animate-fade-in">
                             <AlertCircle className="w-5 h-5 shrink-0" />
                             <p className="text-sm">{error}</p>
                         </div>
@@ -762,7 +762,7 @@ export default function OnboardingPage() {
                                         className={`mt-0.5 shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
                                             acknowledgeVoluntary
                                                 ? 'bg-rose-500 border-rose-500'
-                                                : 'bg-transparent border-[var(--text-secondary)] hover:border-rose-500'
+                                                : 'bg-transparent border-(--text-secondary) hover:border-rose-500'
                                         }`}
                                     >
                                         {acknowledgeVoluntary && (

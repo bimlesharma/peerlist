@@ -96,7 +96,7 @@ export function DashboardHeader({
                 <div className="flex flex-row justify-between items-start md:items-center gap-6 mb-8">
                     {/* Left Section: Name, Enrollment & Actions */}
                     <div className="flex-1 text-left animate-fade-in-up">
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-(--text-primary) uppercase tracking-tight mb-2 break-words">
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-(--text-primary) uppercase tracking-tight mb-2 wrap-break-words">
                             {studentName}
                         </h1>
                         <div className="flex items-center gap-4 mt-3">

@@ -62,7 +62,7 @@ export function Navbar() {
                                     className={cn(
                                         'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                                         isActive
-                                            ? 'bg-[var(--primary)] bg-opacity-10 text-[var(--primary)]'
+                                            ? 'bg-primary bg-opacity-10 text-primary'
                                             : 'text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--hover-bg)'
                                     )}
                                 >
@@ -91,7 +91,7 @@ export function Navbar() {
                         {/* Logout */}
                         <button
                             onClick={handleLogout}
-                            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-[var(--error)] hover:bg-(--hover-bg) transition-colors"
+                            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-(--error) hover:bg-(--hover-bg) transition-colors"
                         >
                             <LogOut className="w-4 h-4" />
                             Logout
@@ -126,7 +126,7 @@ export function Navbar() {
                                         className={cn(
                                             'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                                             isActive
-                                                ? 'bg-[var(--primary)] bg-opacity-10 text-[var(--primary)]'
+                                                ? 'bg-primary bg-opacity-10 text-primary'
                                                 : 'text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--hover-bg)'
                                         )}
                                     >
@@ -137,7 +137,7 @@ export function Navbar() {
                             })}
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-[var(--error)] hover:bg-(--hover-bg) transition-colors"
+                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-(--error) hover:bg-(--hover-bg) transition-colors"
                             >
                                 <LogOut className="w-5 h-5" />
                                 Logout

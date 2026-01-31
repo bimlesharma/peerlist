@@ -192,7 +192,7 @@ export function GradeDistributionChart({ grades, className }: GradeDistributionP
                 <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                     {/* Concentric Rings */}
                     <div className="relative shrink-0">
-                        <svg width={size} height={size} className="w-48 h-48 sm:w-[280px] sm:h-[280px]" viewBox={`0 0 ${size} ${size}`}>
+                        <svg width={size} height={size} className="w-48 h-48 sm:w-70 sm:h-70" viewBox={`0 0 ${size} ${size}`}>
                             {/* Center background circle */}
                             <circle
                                 cx={center}

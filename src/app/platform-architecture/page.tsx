@@ -7,7 +7,7 @@ export default function PlatformArchitecturePage() {
     return (
         <>
             <PublicNavbar />
-            <main className="min-h-screen bg-[var(--bg-primary)] text-(--text-primary)">
+            <main className="min-h-screen bg-(--bg-primary) text-(--text-primary)">
             <section className="max-w-5xl mx-auto px-4 py-16">
                 <div className="flex items-center gap-3 mb-3 text-rose-500">
                     <Code className="w-6 h-6" />
@@ -20,7 +20,7 @@ export default function PlatformArchitecturePage() {
                     external systems. All data access is consent-gated and scoped by privacy rules.
                 </p>
 
-                <div className="p-6 rounded-lg border border-(--card-border) bg-secondary">
+                <div className="p-6 rounded-lg border border-(--card-border) bg-(--card-bg)">
                     <div className="mb-5 flex flex-wrap gap-3 text-xs">
                         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-500">
                             <ArrowDown className="w-3.5 h-3.5" />
@@ -176,9 +176,9 @@ export default function PlatformArchitecturePage() {
 
                 <div className="mt-10 flex flex-wrap gap-4">
                     <Link href="/privacy-policy" className="text-rose-500 hover:text-rose-600 font-medium text-sm">Privacy Policy</Link>
-                    <span className="text-[var(--card-border)]">•</span>
+                    <span className="text-(--card-border)">•</span>
                     <Link href="/terms-of-service" className="text-rose-500 hover:text-rose-600 font-medium text-sm">Terms of Service</Link>
-                    <span className="text-[var(--card-border)]">•</span>
+                    <span className="text-(--card-border)">•</span>
                     <Link href="/data-protection" className="text-rose-500 hover:text-rose-600 font-medium text-sm">Data Protection</Link>
                 </div>
             </section>

@@ -230,7 +230,7 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                                     <th className="px-4 py-4 text-right text-xs font-bold text-(--text-primary) uppercase tracking-wider">CGPA</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[var(--card-border)]">
+                            <tbody className="divide-y divide-(--card-border)">
                                 {filteredData.map((entry, index) => {
                                     const isCurrentUser = entry.student_id === currentUserId;
                                     const rank = index + 1;

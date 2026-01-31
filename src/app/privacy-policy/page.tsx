@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
                 <h1 className="text-3xl font-bold mb-4">Your Privacy, Your Control</h1>
                 <p className="text-(--text-muted) mb-2">Last updated: 31 January 2026</p>
                 <p className="text-(--text-muted) mb-8">
-                    This policy explains how PeerList collects, uses, and protects your data. We are a student-run, independent
+                    This policy explains how ListPeers collects, uses, and protects your data. We are a student-run, independent
                     project and are not affiliated with GGSIPU. All academic data displayed is fetched on-demand and one-time only
                     from official GGSIPU result systems, after explicit user authorization.
                 </p>

@@ -282,9 +282,9 @@ export default function LandingPage() {
                                 <Code className="w-6 h-6 text-rose-500" />
                                 Open Source & Transparent
                             </h2>
-                            <p className="text-(--text-muted) mb-4">PeerList is completely open source. Our code is publicly available for review and contribution. We believe in transparency and community-driven development.</p>
+                            <p className="text-(--text-muted) mb-4">ListPeers is completely open source. Our code is publicly available for review and contribution. We believe in transparency and community-driven development.</p>
                             <a
-                                href="https://github.com/bimlesharma/peerlist"
+                                href="https://github.com/bimlesharma/listpeers"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition-colors"

@@ -13,7 +13,7 @@ export default function PlatformArchitecturePage() {
                     <Code className="w-6 h-6" />
                     <span className="text-sm font-semibold uppercase">Platform Architecture</span>
                 </div>
-                <h1 className="text-3xl font-bold mb-4">How Data Flows Through PeerList</h1>
+                <h1 className="text-3xl font-bold mb-4">How Data Flows Through ListPeers</h1>
                 <p className="text-(--text-muted) mb-2">Last updated: 31 January 2026</p>
                 <p className="text-(--text-muted) mb-8">
                     This diagram shows the system hierarchy and the exact data flow from the user interface to the data layer and

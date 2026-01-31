@@ -1,6 +1,6 @@
-# PeerList - Privacy-First Academic Analytics Platform
+# ListPeers - Privacy-First Academic Analytics Platform
 
-PeerList is a privacy-first, consent-driven academic analytics platform built with Next.js 16, TypeScript, Tailwind CSS, and Supabase. It lets students view and analyze their academic performance while maintaining strict control over what is shared with peers.
+ListPeers is a privacy-first, consent-driven academic analytics platform built with Next.js 16, TypeScript, Tailwind CSS, and Supabase. It lets students view and analyze their academic performance while maintaining strict control over what is shared with peers.
 
 ## Table of Contents
 
@@ -52,7 +52,7 @@ PeerList is a privacy-first, consent-driven academic analytics platform built wi
 
 ## Who Can Use It
 
-PeerList is for students who want a private, consent-based way to analyze and compare academic performance. The platform is designed to be used by students within the same institution/college, with peer visibility limited to users who opt in and match college scope.
+ListPeers is for students who want a private, consent-based way to analyze and compare academic performance. The platform is designed to be used by students within the same institution/college, with peer visibility limited to users who opt in and match college scope.
 
 ## How to Use the Platform
 
@@ -313,8 +313,8 @@ Before submitting a PR:
 
 ## FAQ
 
-**Q: Is PeerList affiliated with my university?**
-No. PeerList is an independent, student-run platform.
+**Q: Is ListPeers affiliated with my university?**
+No. ListPeers is an independent, student-run platform.
 
 **Q: Do you fetch marks automatically?**
 No. All data is manually submitted by students.
@@ -327,4 +327,4 @@ Only raw marks tables are shown; all charts and aggregates are hidden.
 
 ## Disclaimer
 
-PeerList is not affiliated with or endorsed by any university. All data is voluntarily submitted by students. Rankboards are generated solely from self-submitted data and do not represent official academic rankings.
+ListPeers is not affiliated with or endorsed by any university. All data is voluntarily submitted by students. Rankboards are generated solely from self-submitted data and do not represent official academic rankings.

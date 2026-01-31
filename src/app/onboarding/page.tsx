@@ -415,7 +415,7 @@ export default function OnboardingPage() {
                     <div className="text-center mb-8 animate-fade-in-up">
                         <div className="flex items-center justify-center gap-2 mb-4">
                             <GraduationCap className="w-8 h-8 text-primary" />
-                            <h1 className="text-2xl font-bold text-gradient">PeerList</h1>
+                            <h1 className="text-2xl font-bold text-gradient">ListPeers</h1>
                         </div>
                         <h2 className="text-xl font-semibold text-(--text-primary)">
                             {step === 'ipu-login' && 'Verify Your Identity'}

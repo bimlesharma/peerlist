@@ -47,7 +47,7 @@ export function Navbar() {
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{color: 'var(--primary)'}}>
                             <GraduationCap className="w-7 h-7" />
                         </div>
-                        <span className="text-lg font-bold text-transparent bg-clip-text bg-linear-to-r from-rose-500 to-pink-600">PeerList</span>
+                        <span className="text-lg font-bold text-transparent bg-clip-text bg-linear-to-r from-rose-500 to-pink-600">ListPeers</span>
                     </Link>
 
                     {/* Desktop Navigation */}

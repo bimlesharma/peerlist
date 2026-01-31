@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PeerList | Academic Analytics Platform",
+  title: "ListPeers | Academic Analytics Platform",
   description: "Privacy-first, consent-driven academic analytics platform for students",
   robots: "noindex, nofollow", // No SEO indexing as per PRD
   icons: {

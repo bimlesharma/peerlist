@@ -118,7 +118,7 @@ export function SettingsClient({ student, records, consentLogs }: SettingsClient
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `peerlist-export-${student.enrollment_no}-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `listpeers-export-${student.enrollment_no}-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

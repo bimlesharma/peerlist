@@ -17,7 +17,7 @@ export function PublicFooter() {
                             <GraduationCap className="w-full h-full" />
                         </div>
                         <div className="text-7xl sm:text-8xl lg:text-9xl font-bold text-transparent bg-clip-text bg-linear-to-r from-rose-500 to-pink-600 leading-none">
-                            PeerList
+                            ListPeers
                         </div>
                     </div>
                     <p className="text-xl sm:text-2xl text-(--text-primary) font-semibold mb-3">
@@ -33,9 +33,9 @@ export function PublicFooter() {
 
                 {/* Bottom Info */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-(--text-muted) text-sm">
-                    <p>© {currentYear} PeerList • Student-Run • Open Source</p>
+                    <p>© {currentYear} ListPeers • Student-Run • Open Source</p>
                     <span className="hidden sm:inline">•</span>
-                    <a href="https://github.com/bimlesharma/peerlist" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-rose-500 transition-colors">
+                    <a href="https://github.com/bimlesharma/listpeers" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-rose-500 transition-colors">
                         <Github className="w-4 h-4" />
                         GitHub
                     </a>

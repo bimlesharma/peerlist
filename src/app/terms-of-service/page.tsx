@@ -13,10 +13,10 @@ export default function TermsOfServicePage() {
                     <FileText className="w-6 h-6" />
                     <span className="text-sm font-semibold uppercase">Terms of Service</span>
                 </div>
-                <h1 className="text-3xl font-bold mb-4">Terms for Using PeerList</h1>
+                <h1 className="text-3xl font-bold mb-4">Terms for Using ListPeers</h1>
                 <p className="text-(--text-muted) mb-2">Last updated: 31 January 2026</p>
                 <p className="text-(--text-muted) mb-8">
-                    PeerList is an independent, student-run platform. By accessing or using the platform, you agree to these terms.
+                    ListPeers is an independent, student-run platform. By accessing or using the platform, you agree to these terms.
                 </p>
 
                 <div className="space-y-8">
@@ -46,7 +46,7 @@ export default function TermsOfServicePage() {
                             Disclaimer of Warranty
                         </h2>
                         <p className="text-(--text-muted) text-sm">
-                            PeerList is provided “as-is” without warranties. We do not guarantee data accuracy, availability, or
+                            ListPeers is provided “as-is” without warranties. We do not guarantee data accuracy, availability, or
                             uninterrupted service. For official results, always rely on GGSIPU’s official portals.
                         </p>
                     </section>

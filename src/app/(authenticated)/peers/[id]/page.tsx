@@ -7,6 +7,7 @@ interface RecordWithSubjects {
     id: string;
     student_id: string;
     semester: number;
+    submitted_at: string;
     subjects: Subject[];
 }
 
@@ -59,6 +60,7 @@ export default async function PeerDashboardPage({ params }: PageProps) {
                 id: row.record_id,
                 student_id: row.student_id,
                 semester,
+                submitted_at: row.submitted_at,
                 subjects: [],
             });
         }

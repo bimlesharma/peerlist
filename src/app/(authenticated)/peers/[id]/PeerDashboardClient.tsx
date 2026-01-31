@@ -5,11 +5,12 @@ import { ResultTable, SemesterSummaryTable } from '@/components/ResultTable';
 import { SemesterStats, OverallStats } from '@/components/SemesterStats';
 import { SGPATrendChart, GradeDistributionChart, SubjectRadarChart, SemesterMarksChart } from '@/components/PerformanceCharts';
 import { SubjectMarksStackedBarChart } from '@/components/SubjectMarksStackedBarChart';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { marksToGrade, calculateSGPA, calculateCGPA, getGradeDistribution, getSemesterName } from '@/lib/grading';
 import type { AcademicRecord, Subject } from '@/types';
 import Link from 'next/link';
+import { getMaskedIdentity, getPseudonymAvatarColor, type DisplayMode } from '@/lib/privacy';
 
 interface RecordWithSubjects extends AcademicRecord {
     subjects: Subject[];
@@ -33,6 +34,8 @@ interface PeerProfile {
     branch: string | null;
     college: string | null;
     avatar_url: string | null;
+    enrollment_no: string;
+    display_mode: DisplayMode;
 }
 
 interface PeerDashboardClientProps {
@@ -69,8 +72,18 @@ export function PeerDashboardClient({ peer, records }: PeerDashboardClientProps)
     const gradeDistribution = getGradeDistribution(allSubjects);
     const totalCredits = processed.reduce((sum, p) => sum + p.totalCredits, 0);
 
+    // Get masked identity based on display_mode
+    const maskedIdentity = getMaskedIdentity(
+        peer.display_mode,
+        peer.enrollment_no,
+        peer.display_name
+    );
+    const pseudonymColor = peer.display_mode !== 'visible' 
+        ? getPseudonymAvatarColor(maskedIdentity.displayName)
+        : 'bg-rose-500';
+
     // Peer info
-    const peerName = peer.display_name || 'Student';
+    const peerName = maskedIdentity.displayName;
     const institute = peer.college || 'N/A';
     const program = peer.branch || 'N/A';
     const batch = peer.batch || 'N/A';
@@ -122,7 +135,7 @@ export function PeerDashboardClient({ peer, records }: PeerDashboardClientProps)
 
                     <div className="flex items-start gap-4 animate-fade-in-up">
                         {/* Avatar */}
-                        {peer.avatar_url ? (
+                        {maskedIdentity.showAvatar && peer.avatar_url ? (
                             <div className="relative flex-shrink-0">
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl blur opacity-30" />
                                 <img
@@ -134,17 +147,26 @@ export function PeerDashboardClient({ peer, records }: PeerDashboardClientProps)
                         ) : (
                             <div className="relative flex-shrink-0">
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl blur opacity-20" />
-                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-rose-500/20 to-rose-600/10 border-2 border-rose-500/30 flex items-center justify-center">
-                                    <User className="w-8 h-8 text-rose-500/50" />
+                                <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl ${pseudonymColor} border-2 border-opacity-30 border-gray-300 flex items-center justify-center`}>
+                                    <span className="text-lg sm:text-xl font-bold text-white">
+                                        {maskedIdentity.avatarFallback}
+                                    </span>
                                 </div>
                             </div>
                         )}
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] truncate">
-                                {peerName}
-                            </h1>
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] truncate">
+                                    {peerName}
+                                </h1>
+                                {peer.display_mode !== 'visible' && (
+                                    <div title={`Privacy mode: ${peer.display_mode}`} className="flex-shrink-0">
+                                        <Lock className="w-5 h-5 text-[var(--text-muted)] opacity-70" />
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {program && (
                                     <span className="px-2 py-0.5 text-xs font-medium bg-[var(--secondary)] text-[var(--text-secondary)] rounded-md">

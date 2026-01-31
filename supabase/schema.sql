@@ -276,7 +276,9 @@ RETURNS TABLE (
   batch TEXT,
   branch TEXT,
   college TEXT,
-  avatar_url TEXT
+  avatar_url TEXT,
+  enrollment_no TEXT,
+  display_mode TEXT
 )
 LANGUAGE sql
 SECURITY DEFINER SET search_path = public AS $$
@@ -290,7 +292,9 @@ SECURITY DEFINER SET search_path = public AS $$
     s.batch,
     s.branch,
     s.college,
-    s.avatar_url
+    s.avatar_url,
+    s.enrollment_no,
+    s.display_mode
   FROM students s
   JOIN students me ON me.id = auth.uid()
   WHERE
@@ -312,7 +316,9 @@ RETURNS TABLE (
   batch TEXT,
   branch TEXT,
   college TEXT,
-  avatar_url TEXT
+  avatar_url TEXT,
+  enrollment_no TEXT,
+  display_mode TEXT
 )
 LANGUAGE sql
 SECURITY DEFINER SET search_path = public AS $$
@@ -326,7 +332,9 @@ SECURITY DEFINER SET search_path = public AS $$
     s.batch,
     s.branch,
     s.college,
-    s.avatar_url
+    s.avatar_url,
+    s.enrollment_no,
+    s.display_mode
   FROM students s
   JOIN students me ON me.id = auth.uid()
   WHERE

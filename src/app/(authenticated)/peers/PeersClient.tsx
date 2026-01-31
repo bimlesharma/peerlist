@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { Student } from '@/types';
 import { Users, Lock, Loader2, Search, User, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { getMaskedIdentity, getPseudonymAvatarColor, type DisplayMode } from '@/lib/privacy';
 
 interface PeerData {
     id: string;
@@ -14,6 +15,8 @@ interface PeerData {
     branch: string | null;
     college: string | null;
     avatar_url: string | null;
+    enrollment_no: string;
+    display_mode: DisplayMode;
 }
 
 interface PeersClientProps {
@@ -150,48 +153,66 @@ export function PeersClient({ student, peersData }: PeersClientProps) {
             {/* Peers Grid */}
             {filteredPeers.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up stagger-2">
-                    {filteredPeers.map((peer) => (
-                        <Link
-                            key={peer.id}
-                            href={`/peers/${peer.id}`}
-                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 hover:border-rose-500/50 transition-all group"
-                        >
-                            <div className="flex items-start gap-3">
-                                {/* Avatar */}
-                                {peer.avatar_url ? (
-                                    <img
-                                        src={peer.avatar_url}
-                                        alt={peer.name}
-                                        className="w-12 h-12 rounded-full object-cover border-2 border-rose-500/30"
-                                    />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-rose-500/10 border-2 border-rose-500/30 flex items-center justify-center">
-                                        <User className="w-6 h-6 text-rose-500/50" />
-                                    </div>
-                                )}
+                    {filteredPeers.map((peer) => {
+                        const maskedIdentity = getMaskedIdentity(
+                            peer.display_mode,
+                            peer.enrollment_no,
+                            peer.display_name
+                        );
+                        const pseudonymColor = peer.display_mode !== 'visible' 
+                            ? getPseudonymAvatarColor(maskedIdentity.displayName)
+                            : 'bg-rose-500';
 
-                                {/* Info */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-[var(--text-primary)] truncate group-hover:text-rose-500 transition-colors">
-                                            {peer.display_name || 'Student'}
-                                        </h3>
-                                        <ExternalLink className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                        return (
+                            <Link
+                                key={peer.id}
+                                href={`/peers/${peer.id}`}
+                                className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 hover:border-rose-500/50 transition-all group"
+                            >
+                                <div className="flex items-start gap-3">
+                                    {/* Avatar */}
+                                    {maskedIdentity.showAvatar && peer.avatar_url ? (
+                                        <img
+                                            src={peer.avatar_url}
+                                            alt={peer.display_name || 'Student'}
+                                            className="w-12 h-12 rounded-full object-cover border-2 border-rose-500/30"
+                                        />
+                                    ) : (
+                                        <div className={`w-12 h-12 rounded-full ${pseudonymColor} flex items-center justify-center border-2 border-opacity-30 border-gray-300`}>
+                                            <span className="text-xs font-bold text-white">
+                                                {maskedIdentity.avatarFallback}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-semibold text-[var(--text-primary)] truncate group-hover:text-rose-500 transition-colors">
+                                                {maskedIdentity.displayName}
+                                            </h3>
+                                            {peer.display_mode !== 'visible' && (
+                                                <div title={`Privacy mode: ${peer.display_mode}`} className="flex-shrink-0">
+                                                    <Lock className="w-3 h-3 text-[var(--text-muted)] opacity-70" />
+                                                </div>
+                                            )}
+                                            <ExternalLink className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                        {peer.branch && (
+                                            <p className="text-xs text-[var(--text-secondary)] mt-1 truncate">
+                                                {peer.branch}
+                                            </p>
+                                        )}
+                                        {peer.batch && (
+                                            <span className="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-rose-500/10 text-rose-500 rounded-full">
+                                                {peer.batch}
+                                            </span>
+                                        )}
                                     </div>
-                                    {peer.branch && (
-                                        <p className="text-xs text-[var(--text-secondary)] mt-1 truncate">
-                                            {peer.branch}
-                                        </p>
-                                    )}
-                                    {peer.batch && (
-                                        <span className="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-rose-500/10 text-rose-500 rounded-full">
-                                            {peer.batch}
-                                        </span>
-                                    )}
                                 </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-12 text-center animate-fade-in-up stagger-2">

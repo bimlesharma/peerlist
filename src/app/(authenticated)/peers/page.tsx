@@ -31,6 +31,8 @@ export default async function PeersPage() {
         branch: string | null;
         college: string | null;
         avatar_url: string | null;
+        display_name: string | null;
+        display_mode: 'anonymous' | 'pseudonymous' | 'visible';
     }[] = [];
 
     if (student.marks_visibility) {

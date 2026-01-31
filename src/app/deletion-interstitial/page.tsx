@@ -21,6 +21,21 @@ export default async function DeletionInterstitialPage() {
       redirect('/');
     }
 
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (studentError && studentError.code !== 'PGRST116') {
+      console.error('[Deletion Interstitial] Student lookup error:', studentError);
+      redirect('/');
+    }
+
+    if (student) {
+      redirect('/dashboard');
+    }
+
     // Query deletion records server-side
     const { data: deletionRecords, error: deletionError } = await supabase.rpc(
       'get_deletion_proof',

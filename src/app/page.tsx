@@ -11,6 +11,9 @@ import {
     PieChart,
     Zap,
     ArrowRight,
+    ArrowDown,
+    ArrowUp,
+    ArrowLeftRight,
     Loader2,
     Info,
     AlertTriangle,
@@ -23,7 +26,9 @@ import {
     FileText,
     Code,
     Heart,
-    BookOpen
+    BookOpen,
+    Globe,
+    Database
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -169,6 +174,265 @@ export default function LandingPage() {
                             </div>
                         </div>
                     ))}
+                </div>
+            </section>
+
+            {/* System Design Section */}
+            <section className="max-w-7xl mx-auto px-4 py-16">
+                <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-8 flex items-center gap-2">
+                    <Code className="w-8 h-8 text-rose-500" />
+                    System Design Overview
+                </h2>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="p-6 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                        <h3 className="font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                            <Settings className="w-5 h-5 text-rose-500" />
+                            Internal Components
+                        </h3>
+                        <ul className="space-y-2 text-[var(--text-muted)] text-sm">
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>Next.js App (UI): Landing, dashboard, peers, rankboard, settings</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>API Routes: Secure proxy for IPU portal requests</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>Supabase Database: Students, academic records, subjects, consent logs</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>Row-Level Security & RPCs: Enforced privacy and scoped access</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div className="p-6 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                        <h3 className="font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                            <Shield className="w-5 h-5 text-rose-500" />
+                            External Components
+                        </h3>
+                        <ul className="space-y-2 text-[var(--text-muted)] text-sm">
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>GGSIPU Result Systems: On-demand, one-time, user-authorized data source</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>GitHub OAuth: Authentication provider</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-rose-500 mt-1">•</span>
+                                <span>Supabase Auth: Session and identity management</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="mt-6 p-6 rounded-lg bg-[var(--card-bg)] border border-[var(--card-border)]">
+                    <h3 className="font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
+                        <ArrowRight className="w-5 h-5 text-rose-500" />
+                        Data Flow Architecture
+                    </h3>
+
+                    <div className="mb-6 flex flex-wrap gap-3 text-xs">
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-500">
+                            <ArrowDown className="w-3.5 h-3.5" />
+                            Request Path
+                        </span>
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-500">
+                            <ArrowUp className="w-3.5 h-3.5" />
+                            Response Path
+                        </span>
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-500">
+                            <ArrowLeftRight className="w-3.5 h-3.5" />
+                            Consent-Gated Data
+                        </span>
+                    </div>
+
+                    {/* Layer 1: Client */}
+                    <div className="flex justify-center mb-6">
+                        <div className="p-4 rounded-lg border-2 border-rose-500/30 bg-gradient-to-r from-rose-50 to-rose-100/50 dark:from-rose-950/30 dark:to-rose-900/30 w-full max-w-xs text-center">
+                            <div className="text-xs uppercase font-bold text-rose-600 dark:text-rose-400">Layer 1: Presentation</div>
+                            <div className="font-bold text-[var(--text-primary)] mt-2 flex items-center justify-center gap-2">
+                                <Globe className="w-5 h-5 text-rose-500" />
+                                User Browser
+                            </div>
+                            <div className="text-xs text-[var(--text-muted)] mt-1">Landing • Dashboard • Peers • Rankboard • Settings</div>
+                        </div>
+                    </div>
+
+                    {/* Connection: Client -> App */}
+                    <div className="flex justify-center mb-4">
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-rose-500">
+                                <ArrowDown className="w-4 h-4" />
+                                HTTPS Request
+                            </div>
+                            <div className="h-6 w-0.5 bg-rose-500/40"></div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500">
+                                <ArrowUp className="w-4 h-4" />
+                                Response
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Layer 2: Application */}
+                    <div className="flex justify-center mb-6">
+                        <div className="p-4 rounded-lg border-2 border-blue-500/30 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/30 w-full max-w-xs text-center">
+                            <div className="text-xs uppercase font-bold text-blue-600 dark:text-blue-400">Layer 2: Application</div>
+                            <div className="font-bold text-[var(--text-primary)] mt-2 flex items-center justify-center gap-2">
+                                <Settings className="w-5 h-5 text-blue-500" />
+                                Next.js App
+                            </div>
+                            <div className="text-xs text-[var(--text-muted)] mt-2 grid grid-cols-3 gap-2">
+                                <div className="px-2 py-1 rounded bg-[var(--secondary)] border border-[var(--card-border)]">UI Pages</div>
+                                <div className="px-2 py-1 rounded bg-[var(--secondary)] border border-[var(--card-border)]">API Routes</div>
+                                <div className="px-2 py-1 rounded bg-[var(--secondary)] border border-[var(--card-border)]">Auth</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Connection: App -> Data/Auth */}
+                    <div className="flex justify-center mb-4">
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-blue-500">
+                                <ArrowDown className="w-4 h-4" />
+                                Secure API Call
+                            </div>
+                            <div className="h-6 w-0.5 bg-blue-500/40"></div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500">
+                                <ArrowUp className="w-4 h-4" />
+                                Scoped Response
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Layer 3: Data & Auth */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                        {/* Supabase - Left */}
+                        <div className="p-4 rounded-lg border-2 border-purple-500/30 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/30 text-center">
+                            <div className="text-xs uppercase font-bold text-purple-600 dark:text-purple-400">Layer 3a: Authentication</div>
+                            <div className="font-bold text-[var(--text-primary)] mt-2 flex items-center justify-center gap-2">
+                                <Lock className="w-5 h-5 text-purple-500" />
+                                Supabase Auth
+                            </div>
+                            <div className="text-xs text-[var(--text-muted)] mt-2">
+                                <div>GitHub OAuth</div>
+                                <div>Session Management</div>
+                            </div>
+                        </div>
+
+                        {/* Database - Right */}
+                        <div className="p-4 rounded-lg border-2 border-amber-500/30 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/30 text-center">
+                            <div className="text-xs uppercase font-bold text-amber-600 dark:text-amber-400">Layer 3b: Data</div>
+                            <div className="font-bold text-[var(--text-primary)] mt-2 flex items-center justify-center gap-2">
+                                <Database className="w-5 h-5 text-amber-500" />
+                                PostgreSQL DB
+                            </div>
+                            <div className="text-xs text-[var(--text-muted)] mt-2">
+                                <div>Students • Records</div>
+                                <div>RLS • Triggers • RPCs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Consent-Gated Data Exchange */}
+                    <div className="flex items-center justify-center mb-4 px-4">
+                        <div className="flex items-center gap-3 text-xs">
+                            <span className="inline-flex items-center gap-1 text-blue-500">
+                                <ArrowDown className="w-4 h-4" />
+                                Consent Check
+                            </span>
+                            <ArrowLeftRight className="w-4 h-4 text-rose-500/60" />
+                            <span className="inline-flex items-center gap-1 text-emerald-500">
+                                <ArrowUp className="w-4 h-4" />
+                                Data Response
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Connection: On-demand Import */}
+                    <div className="flex justify-center mb-4">
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-green-500">
+                                <ArrowDown className="w-4 h-4" />
+                                On-demand & One-time (Authorized)
+                            </div>
+                            <div className="h-5 w-0.5 bg-green-500/40"></div>
+                        </div>
+                    </div>
+
+                    {/* Layer 4: External Services */}
+                    <div className="flex justify-center mb-4">
+                        <div className="p-4 rounded-lg border-2 border-green-500/30 bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/30 w-full max-w-xs text-center">
+                            <div className="text-xs uppercase font-bold text-green-600 dark:text-green-400">Layer 4: External API</div>
+                            <div className="font-bold text-[var(--text-primary)] mt-2 flex items-center justify-center gap-2">
+                                <GraduationCap className="w-5 h-5 text-green-500" />
+                                GGSIPU Result Systems
+                            </div>
+                            <div className="text-xs text-[var(--text-muted)] mt-1">Official Results (fetched only when authorized)</div>
+                        </div>
+                    </div>
+
+                    {/* Connection: Imported Data Return */}
+                    <div className="flex justify-center mb-6">
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="h-5 w-0.5 bg-green-500/40"></div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500">
+                                <ArrowUp className="w-4 h-4" />
+                                Imported Data
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Data Flow Summary */}
+                    <div className="mt-6 p-4 rounded-lg bg-[var(--secondary)] border border-[var(--card-border)]">
+                        <div className="text-xs uppercase font-bold text-[var(--text-muted)] mb-3">Complete Data Flow:</div>
+                        <div className="space-y-2 text-xs text-[var(--text-muted)]">
+                            <div className="flex items-center gap-2">
+                                <span className="text-rose-500">1</span>
+                                <span>User signs in via GitHub OAuth (Layer 1 → Layer 3a)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-blue-500">2</span>
+                                <span>Next.js App validates session with Supabase Auth (Layer 2 → Layer 3a)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-purple-500">3</span>
+                                <span>User requests data, RLS policies check consent (Layer 2 → Layer 3b)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-amber-500">4</span>
+                                <span>Database returns only consented data via RPCs (Layer 3b → Layer 2)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500">5</span>
+                                <span>For fresh import: App calls GGSIPU Systems, stores in DB (Layer 2 → Layer 4 → Layer 3b)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-rose-500">6</span>
+                                <span>Dashboard displays data to user browser (All Layers → Layer 1)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-6 p-6 rounded-lg bg-[var(--card-bg)] border border-[var(--card-border)]">
+                    <h3 className="font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                        <ArrowRight className="w-5 h-5 text-rose-500" />
+                        How It Works Together
+                    </h3>
+                    <ol className="space-y-2 text-[var(--text-muted)] text-sm list-decimal list-inside">
+                        <li>User signs in with GitHub OAuth and creates a profile.</li>
+                        <li>With explicit authorization, results are fetched on-demand (one-time only) from official IPU systems.</li>
+                        <li>Data is stored in Supabase with strict Row-Level Security and consent tracking.</li>
+                        <li>UI renders analytics, peers, and rankboard based on opt-in consents and cohort rules.</li>
+                        <li>Every consent change is logged immutably for transparency and compliance.</li>
+                    </ol>
                 </div>
             </section>
 

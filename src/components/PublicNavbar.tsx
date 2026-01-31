@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { GraduationCap, Menu, X, Github, Loader2 } from 'lucide-react';
+import { GraduationCap, Menu, X, Github, Loader2, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useTheme } from '@/components/ThemeProvider';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -19,6 +20,7 @@ export function PublicNavbar() {
     const [loading, setLoading] = useState(false);
     const pathname = usePathname();
     const supabase = createClient();
+    const { theme, toggleTheme } = useTheme();
 
     const handleGitHubSignIn = async () => {
         setLoading(true);
@@ -40,10 +42,10 @@ export function PublicNavbar() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-                            <GraduationCap className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{color: 'var(--primary)'}}>
+                            <GraduationCap className="w-7 h-7" />
                         </div>
-                        <span className="text-lg font-bold text-gradient">PeerList</span>
+                        <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600">PeerList</span>
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -73,6 +75,17 @@ export function PublicNavbar() {
                         >
                             Source Code
                         </a>
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)] transition-colors"
+                            aria-label="Toggle theme"
+                        >
+                            {theme === 'dark' ? (
+                                <Sun className="w-5 h-5" />
+                            ) : (
+                                <Moon className="w-5 h-5" />
+                            )}
+                        </button>
                         <button
                             onClick={handleGitHubSignIn}
                             disabled={loading}
@@ -131,6 +144,22 @@ export function PublicNavbar() {
                             >
                                 Source Code
                             </a>
+                            <button
+                                onClick={toggleTheme}
+                                className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--hover-bg)] transition-colors"
+                            >
+                                {theme === 'dark' ? (
+                                    <>
+                                        <Sun className="w-5 h-5" />
+                                        Light Mode
+                                    </>
+                                ) : (
+                                    <>
+                                        <Moon className="w-5 h-5" />
+                                        Dark Mode
+                                    </>
+                                )}
+                            </button>
                             <button
                                 onClick={() => {
                                     setMobileMenuOpen(false);

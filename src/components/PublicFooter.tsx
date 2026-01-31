@@ -10,12 +10,12 @@ export function PublicFooter() {
         <footer 
             className="border-t border-[var(--card-border)] bg-[var(--card-bg)] relative overflow-hidden"
         >
-            <div className="px-[20%] py-20 sm:py-32 text-center relative z-10">
+            <div className="px-[20%] py-16 sm:py-16 text-center relative z-10">
                 {/* Brand */}
                 <div className="mb-12">
                     <div className="flex items-center justify-center gap-6 mb-8 flex-wrap">
-                        <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                            <GraduationCap className="w-12 h-12 text-white" />
+                        <div className="w-36 h-36 flex items-center justify-center" style={{color: 'var(--primary)'}}>
+                            <GraduationCap className="w-full h-full" />
                         </div>
                         <div className="text-7xl sm:text-8xl lg:text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600 leading-none">
                             PeerList

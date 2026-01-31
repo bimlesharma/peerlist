@@ -245,9 +245,54 @@ npm run lint
 
 ## Deploying
 
-1. Deploy the Next.js app (Vercel recommended)
-2. Configure the same environment variables in hosting
-3. Ensure Supabase project is in production mode
+### Production Checklist
+
+1. **Supabase project**
+    - Create a production Supabase project.
+    - Apply [supabase/schema.sql](supabase/schema.sql) and all migrations in [supabase/migrations](supabase/migrations).
+    - Enable GitHub OAuth provider.
+    - Configure **Redirect URLs** in Supabase Auth:
+      - `https://YOUR-DOMAIN/auth/callback`
+      - (Optional) `https://YOUR-PREVIEW-DOMAIN/auth/callback`
+
+2. **GitHub OAuth App**
+    - Update GitHub OAuth App settings:
+      - **Homepage URL**: `https://YOUR-DOMAIN`
+      - **Callback URL**: `https://YOUR-PROJECT.supabase.co/auth/v1/callback`
+
+3. **Environment variables**
+    Set the same variables in your hosting provider:
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+4. **Build & deploy**
+    - Ensure a successful local build:
+      - `npm run build`
+    - Deploy the Next.js app (Vercel recommended).
+
+### Vercel (Recommended)
+
+1. Import the repository in Vercel.
+2. Set environment variables in **Project Settings → Environment Variables**.
+3. Deploy the project.
+4. Add the Vercel domain(s) to Supabase Auth Redirect URLs.
+
+### Netlify (Alternative)
+
+1. Create a new site from your repo.
+2. Build command: `npm run build`
+3. Publish directory: `.next`
+4. Add environment variables in **Site settings → Environment**.
+5. Add the Netlify domain(s) to Supabase Auth Redirect URLs.
+
+### Custom Hosting (Node)
+
+1. Build the app:
+    - `npm run build`
+2. Start the server:
+    - `npm start`
+3. Ensure environment variables are set in your runtime.
+4. Add your domain to Supabase Auth Redirect URLs.
 
 ## Contributing
 

@@ -165,7 +165,7 @@ export default function LandingPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-(--text-muted) pt-8 border-t border-[var(--card-border)]">
                             <div className="flex items-center gap-2">
                                 <span className="text-green-500 font-bold">✓</span>
-                                <span>End-to-end Encrypted</span>
+                                <span>User-controlled privacy</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-green-500 font-bold">✓</span>

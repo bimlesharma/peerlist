@@ -51,7 +51,7 @@ export default function OnboardingPage() {
     const [consentAnalytics, setConsentAnalytics] = useState(true);
     const [consentRankboard, setConsentRankboard] = useState(true);
     const [consentMarksVisibility, setConsentMarksVisibility] = useState(true);
-    const [displayMode, setDisplayMode] = useState<'anonymous' | 'pseudonymous' | 'visible'>('anonymous');
+    const [displayMode, setDisplayMode] = useState<'anonymous' | 'pseudonymous' | 'visible'>('visible');
     const [acknowledgeVoluntary, setAcknowledgeVoluntary] = useState(false);
 
     // UI state
@@ -702,8 +702,11 @@ export default function OnboardingPage() {
 
                                 {/* Display Mode Selector */}
                                 <div className="p-4 rounded-lg bg-secondary border border-(--card-border)">
-                                    <p className="text-sm font-medium text-(--text-primary) mb-3">
+                                    <p className="text-sm font-medium text-(--text-primary)">
                                         Identity Display
+                                    </p>
+                                    <p className="text-xs text-(--text-secondary) mt-1 mb-3">
+                                        You can easily change these settings later any time in the future.
                                     </p>
                                     <div className="space-y-2">
                                         <label className="flex items-center gap-3 cursor-pointer">

@@ -407,7 +407,7 @@ JOIN cohort_stats cs ON cs.id = s.id
 JOIN student_cgpa sc ON sc.student_id = s.id
 WHERE cs.cohort_size >= 2;
 
-REVOKE ALL ON public.rankboard_view FROM authenticated;
+REVOKE ALL ON internal.rankboard_view FROM authenticated;
 
 CREATE OR REPLACE FUNCTION public.get_rankboard()
 RETURNS TABLE (

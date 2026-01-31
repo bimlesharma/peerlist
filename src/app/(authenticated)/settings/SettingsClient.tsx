@@ -135,6 +135,24 @@ export function SettingsClient({ student, records, consentLogs }: SettingsClient
         setError(null);
 
         try {
+            // Step 1: Log deletion event for GDPR compliance (before deleting data)
+            let deletionEventId: string | null = null;
+            
+            const { error: logError, data: deletionData } = await supabase.rpc('log_account_deletion', {
+                p_user_id: student.id,
+                p_email: student.email,
+                p_deletion_reason: 'User-initiated account deletion'
+            });
+
+            if (logError) {
+                console.error('Failed to log deletion event:', logError);
+                setError('Deletion event logging failed, but proceeding with account deletion.');
+            } else {
+                deletionEventId = deletionData;
+                console.log('Deletion event logged with ID:', deletionEventId);
+            }
+
+            // Step 2: Delete all user data
             const { error: deleteError } = await supabase
                 .from('students')
                 .delete()
@@ -146,11 +164,30 @@ export function SettingsClient({ student, records, consentLogs }: SettingsClient
                 return;
             }
 
+            // Step 3: Mark deletion as verified in compliance logs (if we have a deletion event ID)
+            if (deletionEventId) {
+                try {
+                    const { error: verifyError } = await supabase.rpc('verify_deletion_compliance', {
+                        p_deletion_id: deletionEventId,
+                        p_verified_by: 'system_automated'
+                    });
+                    
+                    if (verifyError) {
+                        console.error('Failed to verify deletion compliance:', verifyError);
+                    } else {
+                        console.log('Deletion compliance verified');
+                    }
+                } catch (err) {
+                    console.error('Error verifying deletion:', err);
+                }
+            }
+
+            // Step 4: Sign out and redirect
             await supabase.auth.signOut();
             router.push('/');
         } catch (err) {
             console.error('Delete error:', err);
-            setError('An unexpected error occurred.');
+            setError('An unexpected error occurred. Please contact support.');
             setDeleting(false);
         }
     };

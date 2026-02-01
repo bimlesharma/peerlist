@@ -65,8 +65,8 @@ CREATE TABLE public.subjects (
   name TEXT,
 
   -- Marks Data
-  internal_marks INTEGER DEFAULT 0 CHECK (internal_marks >= 0),
-  external_marks INTEGER DEFAULT 0 CHECK (external_marks >= 0),
+  internal_marks INTEGER,
+  external_marks INTEGER,
 
   -- Scheme Configuration
   max_internal INTEGER CHECK (max_internal > 0),
@@ -74,20 +74,19 @@ CREATE TABLE public.subjects (
 
   -- Computed Total
   total_marks INTEGER GENERATED ALWAYS AS (
-    COALESCE(internal_marks, 0) + COALESCE(external_marks, 0)
+    CASE
+      WHEN internal_marks IS NULL OR external_marks IS NULL THEN NULL
+      ELSE internal_marks + external_marks
+    END
   ) STORED,
-
-  -- Integrity Checks
-  CHECK (internal_marks <= max_internal),
-  CHECK (external_marks <= max_external),
 
   credits INTEGER NOT NULL CHECK (credits BETWEEN 1 AND 10),
   grade TEXT,
   grade_point NUMERIC(3,1) CHECK (grade_point BETWEEN 0 AND 10)
 );
 
-ALTER TABLE public.subjects
-  ALTER COLUMN total_marks SET NOT NULL;
+COMMENT ON TABLE public.subjects IS
+'Marks schema is intentionally flexible to support varying IPU evaluation patterns. No implicit caps are enforced.';
 
 -- =====================================================
 -- 5. CONSENT AUDIT LOG
@@ -135,8 +134,8 @@ CREATE TABLE public.deletion_events (
 
 -- Add comments for clarity
 COMMENT ON TABLE public.deletion_events IS 'Immutable compliance log for account deletions. Records deletion events with hashed identifiers for GDPR/data protection compliance.';
-COMMENT ON COLUMN public.deletion_events.user_id_hash IS 'MD5 hash of user ID for compliance without exposing actual IDs';
-COMMENT ON COLUMN public.deletion_events.email_hash IS 'MD5 hash of email for compliance verification';
+COMMENT ON COLUMN public.deletion_events.user_id_hash IS 'SHA-256 hash of user ID for compliance without exposing actual IDs';
+COMMENT ON COLUMN public.deletion_events.email_hash IS 'SHA-256 hash of email for compliance verification';
 COMMENT ON COLUMN public.deletion_events.is_immutable IS 'Always true. This table should never have DELETE operations.';
 
 -- =====================================================
@@ -231,7 +230,7 @@ RETURNS UUID AS $$
 DECLARE
   v_deletion_id UUID;
 BEGIN
-  -- Generate hashes for privacy protection using md5
+  -- Generate hashes for privacy protection using SHA-256
   INSERT INTO public.deletion_events (
     user_id_hash,
     email_hash,
@@ -239,8 +238,8 @@ BEGIN
     gdpr_compliant,
     data_categories_deleted
   ) VALUES (
-    md5(p_user_id::TEXT),
-    md5(p_email),
+    encode(digest(p_user_id::TEXT, 'sha256'), 'hex'),
+    encode(digest(lower(p_email), 'sha256'), 'hex'),
     p_deletion_reason,
     true,
     ARRAY['student_profile', 'academic_records', 'marks', 'consent_preferences', 'peer_connections']
@@ -287,7 +286,7 @@ BEGIN
     deletion_events.compliance_verified,
     deletion_events.verified_at
   FROM public.deletion_events
-  WHERE deletion_events.email_hash = md5(p_user_email)
+  WHERE deletion_events.email_hash = encode(digest(p_user_email, 'sha256'), 'hex')
   AND deletion_events.gdpr_compliant = true
   ORDER BY deletion_events.deletion_timestamp DESC;
 END;
@@ -378,7 +377,6 @@ semester_stats AS (
     SUM(sub.credits) as total_credits
   FROM academic_records ar
   JOIN subjects sub ON sub.record_id = ar.id
-  WHERE COALESCE(sub.grade_point, 0) > 0
   GROUP BY ar.student_id, ar.semester
 ),
 student_cgpa AS (
@@ -443,7 +441,6 @@ RETURNS TABLE (
   branch TEXT,
   college TEXT,
   avatar_url TEXT,
-  enrollment_no TEXT,
   display_mode TEXT
 )
 LANGUAGE sql
@@ -459,7 +456,6 @@ SECURITY DEFINER SET search_path = public AS $$
     s.branch,
     s.college,
     s.avatar_url,
-    s.enrollment_no,
     s.display_mode
   FROM students s
   JOIN students me ON me.id = auth.uid()
@@ -483,7 +479,6 @@ RETURNS TABLE (
   branch TEXT,
   college TEXT,
   avatar_url TEXT,
-  enrollment_no TEXT,
   display_mode TEXT
 )
 LANGUAGE sql
@@ -499,7 +494,6 @@ SECURITY DEFINER SET search_path = public AS $$
     s.branch,
     s.college,
     s.avatar_url,
-    s.enrollment_no,
     s.display_mode
   FROM students s
   JOIN students me ON me.id = auth.uid()

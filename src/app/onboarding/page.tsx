@@ -287,6 +287,10 @@ export default function OnboardingPage() {
                 console.error('Insert error:', insertError);
                 // Check if the error is due to duplicate key
                 if (insertError.code === '23505') {
+                    const errorMessage = insertError.message || '';
+                    const errorDetails = insertError.details || '';
+                    const errorHint = insertError.hint || '';
+
                     // Duplicate key violation - profile might have been created
                     console.log('Duplicate key error, checking if profile exists now');
                     const { data: profile } = await supabase
@@ -294,13 +298,31 @@ export default function OnboardingPage() {
                         .select('id')
                         .eq('id', user.id)
                         .maybeSingle();
-                    
+
                     if (profile) {
                         // Profile exists now, redirect to dashboard
                         router.refresh();
                         router.replace('/dashboard');
                         return;
                     }
+
+                    // Enrollment already registered for this college
+                    if (
+                        errorMessage.includes('students_enrollment_no_college_key') ||
+                        errorDetails.includes('enrollment_no') ||
+                        errorHint.includes('enrollment_no')
+                    ) {
+                        setError(
+                            'This enrollment number is already registered with another GitHub account for this college. To use ListPeers with a different GitHub account, please delete your existing account first from Settings, then return here to re-register.'
+                        );
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Generic duplicate key message
+                    setError('A profile already exists for this account. Please refresh or go to your dashboard.');
+                    setLoading(false);
+                    return;
                 }
                 setError('Failed to create profile. Please try again.');
                 setLoading(false);

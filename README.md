@@ -311,6 +311,23 @@ Before submitting a PR:
 2. Keep changes focused and well-documented
 3. Update README if behavior changes
 
+## Performance & Lazy Loading
+
+ListPeers implements several lazy loading and performance optimizations to enhance user experience:
+
+- **Suspense Boundaries**: Dashboard, peers, and rankboard pages use React Suspense with skeleton loaders for progressive rendering
+- **Dynamic Imports**: Heavy chart components (Recharts) are code-split and loaded on-demand
+- **Image Lazy Loading**: Avatar images use next/image with native lazy loading
+- **IntersectionObserver Hooks**: Custom hooks (`useLazyLoad`, `useInViewport`) for viewport-based content loading
+- **Skeleton Screens**: Theme-aware skeleton loaders display while data loads
+
+### Implementation Details
+
+- Charts load with animated skeleton placeholders
+- Landing page sections use `InView` component for scroll-triggered rendering
+- Database queries use pagination and selective field loading
+- All images use `loading="lazy"` for native browser optimization
+
 ## FAQ
 
 **Q: Is ListPeers affiliated with my university?**

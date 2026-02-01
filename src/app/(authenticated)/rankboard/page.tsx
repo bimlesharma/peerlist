@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { RankboardClient } from './RankboardClient';
 import type { RankboardEntry } from '@/types';
+import { Suspense } from 'react';
+import { HeaderSkeleton, ChartSkeleton, TableSkeleton } from '@/components/SkeletonLoader';
 
 export default async function RankboardPage() {
     const supabase = await createClient();
@@ -35,10 +37,20 @@ export default async function RankboardPage() {
     }
 
     return (
-        <RankboardClient
-            student={student}
-            rankboardData={rankboardData}
-            currentUserId={user.id}
-        />
+        <Suspense
+            fallback={
+                <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+                    <HeaderSkeleton />
+                    <ChartSkeleton />
+                    <TableSkeleton />
+                </div>
+            }
+        >
+            <RankboardClient
+                student={student}
+                rankboardData={rankboardData}
+                currentUserId={user.id}
+            />
+        </Suspense>
     );
 }

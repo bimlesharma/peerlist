@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { PeersClient } from './PeersClient';
+import { Suspense } from 'react';
+import { HeaderSkeleton, GridSkeleton } from '@/components/SkeletonLoader';
 
 export default async function PeersPage() {
     const supabase = await createClient();
@@ -43,9 +45,18 @@ export default async function PeersPage() {
     }
 
     return (
-        <PeersClient
-            student={student}
-            peersData={peersData}
-        />
+        <Suspense
+            fallback={
+                <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+                    <HeaderSkeleton />
+                    <GridSkeleton count={6} />
+                </div>
+            }
+        >
+            <PeersClient
+                student={student}
+                peersData={peersData}
+            />
+        </Suspense>
     );
 }

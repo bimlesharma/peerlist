@@ -250,7 +250,9 @@ export default function OnboardingPage() {
                 .maybeSingle();
 
             if (existingByEnrollment) {
-                setError('This enrollment number is already registered with another account. If this is your enrollment number, please contact support.');
+                setError(
+                    'This enrollment number is already registered with another GitHub account. To use ListPeers with a different GitHub account, please delete your existing account first from your Settings, then return here to re-register.'
+                );
                 setLoading(false);
                 return;
             }
@@ -437,7 +439,7 @@ export default function OnboardingPage() {
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-(--error) bg-opacity-10 text-(--error) animate-fade-in">
+                        <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-100 border border-red-400 text-red-900 animate-fade-in">
                             <AlertCircle className="w-5 h-5 shrink-0" />
                             <p className="text-sm">{error}</p>
                         </div>

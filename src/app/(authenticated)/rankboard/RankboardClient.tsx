@@ -251,8 +251,8 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                     <p className="text-sm text-(--text-secondary) mb-6">
                         CGPA by rank across {filteredData.length} participant{filteredData.length !== 1 ? 's' : ''}
                     </p>
-                    <div className="h-64 min-h-[260px]">
-                        <ResponsiveContainer width="100%" height="100%" minHeight={260}>
+                    <div className="w-full h-64 min-h-[260px] min-w-0">
+                        <ResponsiveContainer width="100%" height="100%" minHeight={260} minWidth={0}>
                             <LineChart data={cgpaTrendData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#27272a' : '#d6d3d1'} />
                                 <XAxis

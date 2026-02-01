@@ -29,15 +29,17 @@ export default function LandingPage() {
     const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
 
     const handleGitHubSignIn = async () => {
-        setLoading(true);
         try {
-            await supabase.auth.signInWithOAuth({
+            setLoading(true);
+            const result = await supabase.auth.signInWithOAuth({
                 provider: 'github',
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
                 },
             });
-        } finally {
+            // OAuth redirect happens automatically, keep loading state
+        } catch (error) {
+            console.error('Sign-in error:', error);
             setLoading(false);
         }
     };
@@ -150,14 +152,19 @@ export default function LandingPage() {
                             <button
                                 onClick={handleGitHubSignIn}
                                 disabled={loading}
-                                className="flex items-center justify-center gap-2 px-8 py-4 bg-linear-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg hover:shadow-xl"
+                                className="flex items-center justify-center gap-2 px-8 py-4 bg-linear-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl"
                             >
                                 {loading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Redirecting...
+                                    </>
                                 ) : (
-                                    <Github className="w-5 h-5" />
+                                    <>
+                                        <Github className="w-5 h-5" />
+                                        Sign In with GitHub
+                                    </>
                                 )}
-                                Sign In with GitHub
                             </button>
                         </div>
 

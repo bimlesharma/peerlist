@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from '@/components/ThemeProvider';
+import { useNavigationLoading } from '@/hooks/useNavigationLoading';
 import { cn } from '@/lib/utils';
 import {
     GraduationCap,
@@ -28,14 +29,24 @@ const navItems = [
 
 export function Navbar() {
     const pathname = usePathname();
-    const router = useRouter();
     const supabase = createClient();
     const { theme, toggleTheme } = useTheme();
+    const { navigate, isPending } = useNavigationLoading();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push('/');
+        setIsLoggingOut(true);
+        try {
+            // Sign out from Supabase (non-blocking)
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            // Always redirect, whether signOut succeeded or not
+            // Use window.location for faster redirect
+            window.location.href = '/';
+        }
     };
 
     return (
@@ -56,11 +67,12 @@ export function Navbar() {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
                             return (
-                                <Link
+                                <button
                                     key={item.href}
-                                    href={item.href}
+                                    onClick={() => navigate(item.href)}
+                                    disabled={isPending}
                                     className={cn(
-                                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
                                         isActive
                                             ? 'bg-primary bg-opacity-10 text-primary'
                                             : 'text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--hover-bg)'
@@ -68,7 +80,7 @@ export function Navbar() {
                                 >
                                     <Icon className="w-4 h-4" />
                                     {item.label}
-                                </Link>
+                                </button>
                             );
                         })}
                     </div>
@@ -91,10 +103,20 @@ export function Navbar() {
                         {/* Logout */}
                         <button
                             onClick={handleLogout}
-                            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-(--error) hover:bg-(--hover-bg) transition-colors"
+                            disabled={isLoggingOut}
+                            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-(--error) hover:bg-(--hover-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <LogOut className="w-4 h-4" />
-                            Logout
+                            {isLoggingOut ? (
+                                <>
+                                    <span className="w-4 h-4 animate-spin inline-block" style={{borderRadius: '50%', border: '2px solid currentColor', borderTopColor: 'transparent'}} />
+                                    Logging out...
+                                </>
+                            ) : (
+                                <>
+                                    <LogOut className="w-4 h-4" />
+                                    Logout
+                                </>
+                            )}
                         </button>
 
                         {/* Mobile menu button */}
@@ -119,12 +141,15 @@ export function Navbar() {
                                 const Icon = item.icon;
                                 const isActive = pathname === item.href;
                                 return (
-                                    <Link
+                                    <button
                                         key={item.href}
-                                        href={item.href}
-                                        onClick={() => setMobileMenuOpen(false)}
+                                        onClick={() => {
+                                            navigate(item.href);
+                                            setMobileMenuOpen(false);
+                                        }}
+                                        disabled={isPending}
                                         className={cn(
-                                            'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                                            'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
                                             isActive
                                                 ? 'bg-primary bg-opacity-10 text-primary'
                                                 : 'text-(--text-secondary) hover:text-(--text-primary) hover:bg-(--hover-bg)'
@@ -132,15 +157,28 @@ export function Navbar() {
                                     >
                                         <Icon className="w-5 h-5" />
                                         {item.label}
-                                    </Link>
+                                    </button>
                                 );
                             })}
                             <button
-                                onClick={handleLogout}
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-(--error) hover:bg-(--hover-bg) transition-colors"
+                                onClick={() => {
+                                    handleLogout();
+                                    setMobileMenuOpen(false);
+                                }}
+                                disabled={isLoggingOut}
+                                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-(--text-secondary) hover:text-(--error) hover:bg-(--hover-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <LogOut className="w-5 h-5" />
-                                Logout
+                                {isLoggingOut ? (
+                                    <>
+                                        <span className="w-5 h-5 animate-spin inline-block" style={{borderRadius: '50%', border: '2px solid currentColor', borderTopColor: 'transparent'}} />
+                                        Logging out...
+                                    </>
+                                ) : (
+                                    <>
+                                        <LogOut className="w-5 h-5" />
+                                        Logout
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

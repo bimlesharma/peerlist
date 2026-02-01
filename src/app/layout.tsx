@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { CursorProvider } from "@/contexts/CursorContext";
 import { GlobalCursorEffect } from "@/components/GlobalCursorEffect";
+import { GlobalLoadingIndicator } from "@/components/GlobalLoadingIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
       >
         <CursorProvider>
           <GlobalCursorEffect />
+          <GlobalLoadingIndicator />
           <ThemeProvider>
             {children}
           </ThemeProvider>

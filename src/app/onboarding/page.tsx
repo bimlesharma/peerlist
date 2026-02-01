@@ -17,6 +17,7 @@ import {
     ShieldCheck,
     ArrowRight,
     Download,
+    LogOut,
 } from 'lucide-react';
 
 type Step = 'ipu-login' | 'fetching' | 'review' | 'consent';
@@ -64,6 +65,7 @@ export default function OnboardingPage() {
     const [checkingProfile, setCheckingProfile] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [fetchProgress, setFetchProgress] = useState('');
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const maskEmail = (email?: string | null) => {
         if (!email || !email.includes('@')) {
@@ -109,6 +111,17 @@ export default function OnboardingPage() {
         },
         [supabase]
     );
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            window.location.href = '/';
+        }
+    };
 
     // Check if user already has a profile
     useEffect(() => {
@@ -498,6 +511,19 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen flex flex-col">
+            {/* Logout button - top right */}
+            <div className="absolute top-4 right-4 z-10">
+                <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-(--text-secondary) hover:text-rose-500 transition-colors rounded-lg hover:bg-(--hover-bg) disabled:opacity-50"
+                    title="Sign out"
+                >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline">Sign out</span>
+                </button>
+            </div>
+
             <main className="flex-1 flex items-center justify-center px-4 py-12">
                 <div className="w-full max-w-md">
                     <div className="text-center mb-8 animate-fade-in-up">

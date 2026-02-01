@@ -1,13 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { Student } from '@/types';
 import { Trophy, Lock, Users, Filter, Loader2, X, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '@/components/ThemeProvider';
+import { ChartSkeleton } from '@/components/SkeletonLoader';
+
+// Lazy load Recharts to reduce initial bundle size
+const LineChart = dynamic(() => import('recharts').then(mod => ({ default: mod.LineChart })), { ssr: false });
+const Line = dynamic(() => import('recharts').then(mod => ({ default: mod.Line })), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then(mod => ({ default: mod.XAxis })), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then(mod => ({ default: mod.YAxis })), { ssr: false });
+const CartesianGrid = dynamic(() => import('recharts').then(mod => ({ default: mod.CartesianGrid })), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then(mod => ({ default: mod.Tooltip })), { ssr: false });
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })), { ssr: false });
 
 interface RankboardEntry {
     student_id: string;
@@ -262,9 +272,10 @@ export function RankboardClient({ student, rankboardData, currentUserId }: Rankb
                                         color: isDark ? '#ffffff' : '#1c1917',
                                     }}
                                     labelStyle={{ color: isDark ? '#ffffff' : '#1c1917' }}
-                                    formatter={(value: number | undefined) => {
-                                        if (value === undefined) return ['-', 'CGPA'];
-                                        return [value.toFixed(2), 'CGPA'];
+                                    formatter={(value: any) => {
+                                        if (value === undefined || value === null) return ['-', 'CGPA'];
+                                        const numValue = typeof value === 'number' ? value : parseFloat(value);
+                                        return [numValue.toFixed(2), 'CGPA'];
                                     }}
                                     labelFormatter={(label) => `Rank #${label}`}
                                 />

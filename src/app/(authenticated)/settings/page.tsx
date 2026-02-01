@@ -1,7 +1,22 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { SettingsClient } from './SettingsClient';
+import dynamic from 'next/dynamic';
 import type { AcademicRecord, Subject } from '@/types';
+import { HeaderSkeleton } from '@/components/SkeletonLoader';
+
+const SettingsClient = dynamic(() => import('./SettingsClient').then(mod => ({ default: mod.SettingsClient })), {
+    loading: () => (
+        <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+            <HeaderSkeleton />
+            <div className="space-y-6">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="animate-pulse bg-(--card-bg) border border-(--card-border) rounded-xl p-6 h-32" />
+                ))}
+            </div>
+        </div>
+    ),
+    ssr: false
+});
 
 interface RecordWithSubjects extends AcademicRecord {
     subjects: Subject[];

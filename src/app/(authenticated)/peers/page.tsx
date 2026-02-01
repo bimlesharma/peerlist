@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { PeersClient } from './PeersClient';
+import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { HeaderSkeleton, GridSkeleton } from '@/components/SkeletonLoader';
+
+const PeersClient = dynamic(() => import('./PeersClient').then(mod => ({ default: mod.PeersClient })), {
+    loading: () => (
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+            <HeaderSkeleton />
+            <GridSkeleton count={9} />
+        </div>
+    ),
+    ssr: false
+});
 
 export default async function PeersPage() {
     const supabase = await createClient();

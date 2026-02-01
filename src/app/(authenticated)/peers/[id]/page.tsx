@@ -1,7 +1,21 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
-import { PeerDashboardClient } from './PeerDashboardClient';
+import dynamic from 'next/dynamic';
 import type { Subject } from '@/types';
+import { HeaderSkeleton, ChartSkeleton, TableSkeleton, GridSkeleton } from '@/components/SkeletonLoader';
+
+const PeerDashboardClient = dynamic(() => import('./PeerDashboardClient').then(mod => ({ default: mod.PeerDashboardClient })), {
+    loading: () => (
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+            <HeaderSkeleton />
+            <GridSkeleton count={6} />
+            <ChartSkeleton />
+            <ChartSkeleton />
+            <TableSkeleton />
+        </div>
+    ),
+    ssr: false
+});
 
 interface RecordWithSubjects {
     id: string;

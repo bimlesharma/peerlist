@@ -31,7 +31,7 @@ export function Navbar() {
     const pathname = usePathname();
     const supabase = createClient();
     const { theme, toggleTheme } = useTheme();
-    const { navigate, isPending } = useNavigationLoading();
+    const { navigate, isPending, prefetch } = useNavigationLoading();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -70,6 +70,7 @@ export function Navbar() {
                                 <button
                                     key={item.href}
                                     onClick={() => navigate(item.href)}
+                                    onMouseEnter={() => prefetch(item.href)}
                                     disabled={isPending}
                                     className={cn(
                                         'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
@@ -147,6 +148,7 @@ export function Navbar() {
                                             navigate(item.href);
                                             setMobileMenuOpen(false);
                                         }}
+                                        onTouchStart={() => prefetch(item.href)}
                                         disabled={isPending}
                                         className={cn(
                                             'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',

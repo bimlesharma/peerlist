@@ -1,9 +1,22 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { DashboardClient } from './DashboardClient';
+import dynamic from 'next/dynamic';
 import type { AcademicRecord, Subject } from '@/types';
 import { Suspense } from 'react';
 import { HeaderSkeleton, ChartSkeleton, TableSkeleton, GridSkeleton } from '@/components/SkeletonLoader';
+
+const DashboardClient = dynamic(() => import('./DashboardClient').then(mod => ({ default: mod.DashboardClient })), {
+    loading: () => (
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+            <HeaderSkeleton />
+            <GridSkeleton count={6} />
+            <ChartSkeleton />
+            <ChartSkeleton />
+            <TableSkeleton />
+        </div>
+    ),
+    ssr: false
+});
 
 interface RecordWithSubjects extends AcademicRecord {
     subjects: Subject[];

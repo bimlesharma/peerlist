@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 /**
  * Hook for managing loading state during navigation
  * Prevents double-clicks and provides visual feedback
+ * Includes prefetching for faster navigation
  */
 export function useNavigationLoading() {
     const router = useRouter();
@@ -27,10 +28,15 @@ export function useNavigationLoading() {
         });
     };
 
+    const prefetch = (href: string) => {
+        router.prefetch(href);
+    };
+
     return {
         navigate,
         navigateReplace,
         refresh,
+        prefetch,
         isPending,
     };
 }

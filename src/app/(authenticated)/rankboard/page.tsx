@@ -1,9 +1,20 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { RankboardClient } from './RankboardClient';
+import dynamic from 'next/dynamic';
 import type { RankboardEntry } from '@/types';
 import { Suspense } from 'react';
 import { HeaderSkeleton, ChartSkeleton, TableSkeleton } from '@/components/SkeletonLoader';
+
+const RankboardClient = dynamic(() => import('./RankboardClient').then(mod => ({ default: mod.RankboardClient })), {
+    loading: () => (
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+            <HeaderSkeleton />
+            <ChartSkeleton />
+            <TableSkeleton />
+        </div>
+    ),
+    ssr: false
+});
 
 export default async function RankboardPage() {
     const supabase = await createClient();

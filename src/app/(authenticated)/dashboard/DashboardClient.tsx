@@ -1,14 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { ResultTable, SemesterSummaryTable, ResultTableRawOnly, SemesterSummaryTableRawOnly } from '@/components/ResultTable';
 import { SemesterStats, OverallStats } from '@/components/SemesterStats';
-import { SGPATrendChart, GradeDistributionChart, SubjectRadarChart, SemesterMarksChart, SubjectMarksStackedBarChart } from '@/components/LazyCharts';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { marksToGrade, calculateSGPA, calculateCGPA, getGradeDistribution, getSemesterName } from '@/lib/grading';
 import type { Student, AcademicRecord, Subject } from '@/types';
+import { ChartSkeleton } from '@/components/SkeletonLoader';
+
+// Lazy load chart components for better performance
+const SGPATrendChart = dynamic(() => import('@/components/LazyCharts').then(mod => ({ default: mod.SGPATrendChart })), {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+});
+
+const GradeDistributionChart = dynamic(() => import('@/components/LazyCharts').then(mod => ({ default: mod.GradeDistributionChart })), {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+});
+
+const SubjectRadarChart = dynamic(() => import('@/components/LazyCharts').then(mod => ({ default: mod.SubjectRadarChart })), {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+});
+
+const SemesterMarksChart = dynamic(() => import('@/components/LazyCharts').then(mod => ({ default: mod.SemesterMarksChart })), {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+});
+
+const SubjectMarksStackedBarChart = dynamic(() => import('@/components/LazyCharts').then(mod => ({ default: mod.SubjectMarksStackedBarChart })), {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+});
 
 interface RecordWithSubjects extends AcademicRecord {
     subjects: Subject[];
